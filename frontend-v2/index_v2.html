@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+        <meta name="theme-color" content="#17141e">
+        <meta name="theme-color" content="#17141e" media="(prefers-color-scheme: dark)">
+        <meta name="theme-color" content="#c1b8d4" media="(prefers-color-scheme: light)">
+        <title>Document</title>
+        <link rel="stylesheet" href="reset.css">
+        <link rel="stylesheet" href="colors.css">
+        <link rel="stylesheet" href="components.css">
+    </head>
+    <body>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                if (!sessionStorage.getItem('page-animated') || true) {
+                    document.querySelectorAll('.animable').forEach(el => {
+                        el.classList.add('animate');
+                    });
+                    sessionStorage.setItem('page-animated', true);
+                }
+            });
+        </script>
+        <div class="app">
+            <div class="head animable">
+                <div class="moon-wrapper animable">
+                    <div class="moon animable"></div>
+                </div>
+                <h1 class="onBackgroundText">Good evening, Gemmy!<br>Ready to wind down?</h1>               
+            </div>
+            <div class = "content">
+
+                <div class="combohero animable">
+                    <div class="hero">
+                        <div class="combo-text">
+                        <p class="combo-title">Latest dream</p>
+                        <div class="combo-stats">
+                            <h1 class="combo-stat-large">Bird</h1>
+                            <p class="combo-stat-small">2026-04-24</p>
+                        </div>
+                        </div>
+                        <div class="combo-icon"></div>
+                    </div>
+
+                    <div class="combo-buttons">
+                        <button class="btn btn-surface">Add thoughts</button>
+                        <button class="btn btn-accent">Chat</button>
+                    </div>
+                </div>
+
+                <div class = "fullmetric animable">
+                    <div class = "full-text">
+                        <h2 class = "full-title">AI sleep soundscape</h2>
+                        <h2 class = "full-content">7.5 hours</h2>
+                    </div>
+                    <div class = "full-button">-></div>
+                </div>
+
+                <div class = "halfcontainer animable">
+                    <div class = "halfmetric animable">
+                        <h2 class="half-title">Bedtime</h2>
+                        <h2 class="half-content">7:20 pm avg</h2>
+                    </div>
+                    <div class = "halfmetric animable">
+                        <h2 class="half-title">Wake up</h2>
+                        <h2 class="half-content">10:20 pm avg</h2>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <script src = "pill.js"></script>
+        <script src = "pills/fullmetric.js"></script>
+        <script src = "pills/halfcontainer.js"></script>
+        <script src = "pills/combohero.js"></script>
+        <script src = "viewmodel.js"></script>
+        <script src = "view.js"></script>
+    </body>
+</html>

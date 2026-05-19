@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reverie — AI Sleep Operating System</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <!-- Our stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Stars background (populated by JS) -->
+  <div class="stars" id="stars"></div>
+
+  <div class="page">
+
+    <!-- HEADER -->
+    <header>
+      <div class="moon-circle"></div>
+      <div class="project-label">AI Startup Challenge — Capstone Project</div>
+      <h1><em>Reverie</em></h1>
+      <p class="tagline">Your personal sleep operating system.</p>
+      <div class="team-pill">
+        <span class="dot"></span>
+        Simone &nbsp;·&nbsp; Diego &nbsp;·&nbsp; Megan
+        <span class="dot"></span>
+      </div>
+    </header>
+
+    <div class="divider"><span>✦</span></div>
+
+    <!-- 01 THE PROBLEM -->
+    <section>
+      <div class="section-tag">01 — Problem</div>
+      <h2>Sleep is broken. Dreams are invisible.</h2>
+      <p>A third of adults don't get enough sleep (CDC), costing the global economy over $585 billion annually in lost productivity. Yet the solutions available today — apps like Calm or Sleep Cycle — only track when and how long you sleep. They ignore the other half of the equation: what happens in your mind while you do.</p>
+      <p>We forget 95% of our dreams within ten minutes of waking. That's a daily window into our emotional patterns, recurring anxieties, and subconscious life — completely lost. No app currently bridges the gap between sleep data and dream meaning.</p>
+
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-num">1 in 3</div>
+          <div class="stat-label">Adults sleep-deprived</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">$585B</div>
+          <div class="stat-label">Annual productivity loss</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">95%</div>
+          <div class="stat-label">Dreams forgotten in 10 min</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">50M</div>
+          <div class="stat-label">US adults willing to pay</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"><span>✦</span></div>
+
+    <!-- 02 SOLUTION -->
+    <section>
+      <div class="section-tag">02 — Solution</div>
+      <h2>An AI that turns dreams into experiences.</h2>
+      <p>Reverie is an AI-powered sleep companion that does what no competitor does: it combines smart sleep scheduling with an intelligent dream journal that makes your dreams <em>come alive</em>. Log a dream, and Reverie generates a visual storyboard, a custom soundscape, and a narrated bedtime story — all drawn from your own subconscious.</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🌙</div>
+          <div class="feature-name">Smart Sleep Scheduling</div>
+          <div class="feature-desc">Personalized sleep windows based on your chronotype, age, and calendar.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎨</div>
+          <div class="feature-name">Dream → Visual Storyboard</div>
+          <div class="feature-desc">AI-generated images from your dream description using DALL-E / Stable Diffusion.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎵</div>
+          <div class="feature-name">Dream → Soundscape</div>
+          <div class="feature-desc">ElevenLabs audio generation creates an ambient soundscape from your dream's mood.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📖</div>
+          <div class="feature-name">Dream → Bedtime Story</div>
+          <div class="feature-desc">GPT-4 rewrites your dream as a calming narrated story to fall asleep to.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <div class="feature-name">Focus Mode</div>
+          <div class="feature-desc">App lock screen prevents distraction during your sleep window (full Android support).</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🧠</div>
+          <div class="feature-name">Pattern Analysis</div>
+          <div class="feature-desc">NLP identifies recurring themes, emotions, and locations across your dream journal.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"><span>✦</span></div>
+
+    <!-- 03 AI ARCHITECTURE -->
+    <section>
+      <div class="section-tag">03 — AI Integration (20% of grade)</div>
+      <h2>Core AI components.</h2>
+      <p>Reverie is built around a multi-model AI pipeline, each feature powered by purpose-selected technology.</p>
+
+      <table class="ai-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>AI Technology</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Dream → storyboard image</td>
+            <td><span class="tech-badge">DALL-E / Stable Diffusion</span></td>
+          </tr>
+          <tr>
+            <td>Dream → ambient soundscape</td>
+            <td><span class="tech-badge">ElevenLabs Audio + Prompt Engineering</span></td>
+          </tr>
+          <tr>
+            <td>Dream → narrated bedtime story</td>
+            <td><span class="tech-badge">GPT-4 + ElevenLabs TTS</span></td>
+          </tr>
+          <tr>
+            <td>Dream pattern analysis</td>
+            <td><span class="tech-badge">NLP Keyword Extraction + Sentiment Analysis</span></td>
+          </tr>
+          <tr>
+            <td>Sleep coach chatbot</td>
+            <td><span class="tech-badge">RAG over user logs + medical guidelines</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="divider"><span>✦</span></div>
+
+    <!-- 04 BUSINESS MODEL -->
+    <section>
+      <div class="section-tag">04 — Business Model (15% of grade)</div>
+      <h2>Freemium, designed to convert.</h2>
+      <p>Target market: 25–40 year old professionals experiencing sleep issues. Break-even at 5,000 premium users. Investment ask: $150,000 for 12 months of runway.</p>
+
+      <div class="pricing-row">
+        <div class="price-card">
+          <div class="price-tier">Free Tier</div>
+          <div class="price-amt">$0</div>
+          <div class="price-period">forever</div>
+          <ul class="price-features">
+            <li>Sleep schedule & dashboard</li>
+            <li>Text dream journal</li>
+            <li>Basic wind-down routines</li>
+            <li>Sleep chatbot</li>
+          </ul>
+        </div>
+        <div class="price-card featured">
+          <div class="price-tier">Premium</div>
+          <div class="price-amt">$7.99</div>
+          <div class="price-period">per month</div>
+          <ul class="price-features">
+            <li>AI dream storyboards</li>
+            <li>Custom soundscapes</li>
+            <li>Narrated bedtime stories</li>
+            <li>Dream pattern analysis</li>
+            <li>Focus mode lock screen</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"><span>✦</span></div>
+
+    <!-- 05 TIMELINE -->
+    <section>
+      <div class="section-tag">05 — Technical Implementation (30% of grade)</div>
+      <h2>8-week prototype plan.</h2>
+      <p>Built in Flutter for cross-platform deployment. The prototype is scoped into two focused phases.</p>
+
+      <div class="timeline">
+        <div class="phase">
+          <div class="phase-weeks">Wks 1–4</div>
+          <div class="phase-dot"></div>
+          <div class="phase-content">
+            <div class="phase-title">MVP Build</div>
+            <ul class="phase-items">
+              <li>Sleep schedule + dashboard UI</li>
+              <li>Dream journal (text storage)</li>
+              <li>3 pre-built wind-down routines</li>
+              <li>Screen lock (Android)</li>
+              <li>1 AI-generated image per dream</li>
+            </ul>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="phase-weeks">Wks 5–8</div>
+          <div class="phase-dot"></div>
+          <div class="phase-content">
+            <div class="phase-title">v1.1 — AI Layer</div>
+            <ul class="phase-items">
+              <li>AI bedtime story from dream input</li>
+              <li>Basic pattern analysis (keyword recurrence)</li>
+              <li>One AI-generated dream soundscape</li>
+              <li>Sleep chatbot (RAG pipeline)</li>
+              <li>Pitch deck + demo prep</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"><span>✦</span></div>
+
+    <!-- 06 TEAM -->
+    <section>
+      <div class="section-tag">06 — Team</div>
+      <h2>Three builders, one mission.</h2>
+
+      <div class="team-grid">
+        <div class="member-card">
+          <div class="member-avatar">🤖</div>
+          <div class="member-name">Simone</div>
+          <div class="member-role">AI Core</div>
+          <div class="member-tasks">GPT & ElevenLabs APIs, dream→image/text pipeline, pattern analysis, chatbot</div>
+        </div>
+        <div class="member-card">
+          <div class="member-avatar">📱</div>
+          <div class="member-name">Diego</div>
+          <div class="member-role">Frontend</div>
+          <div class="member-tasks">Flutter app, dream library, lock screen widget, sleep dashboard & journal UI</div>
+        </div>
+        <div class="member-card">
+          <div class="member-avatar">📊</div>
+          <div class="member-name">Megan</div>
+          <div class="member-role">Content & Biz</div>
+          <div class="member-tasks">Market research, API sourcing, sleep content, one-pager, pitch deck, demo prep</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"><span>✦</span></div>
+
+    <!-- 07 RUBRIC -->
+    <section>
+      <div class="section-tag">07 — Rubric Alignment</div>
+      <h2>How Reverie earns every point.</h2>
+
+      <div class="rubric-grid">
+        <div class="rubric-item">
+          <div class="rubric-pct">30%</div>
+          <div>
+            <div class="rubric-area">Technical Implementation</div>
+            <div class="rubric-note">Flutter prototype with working dream journal, sleep dashboard, focus mode, and API integrations.</div>
+          </div>
+        </div>
+        <div class="rubric-item">
+          <div class="rubric-pct">20%</div>
+          <div>
+            <div class="rubric-area">AI Integration</div>
+            <div class="rubric-note">Five distinct AI models (GPT-4, DALL-E, ElevenLabs, NLP, RAG) each serving a specific core feature.</div>
+          </div>
+        </div>
+        <div class="rubric-item">
+          <div class="rubric-pct">20%</div>
+          <div>
+            <div class="rubric-area">Pitch</div>
+            <div class="rubric-note">10-min investor pitch following the required Hook → Problem → Solution → Demo → Market → Model → Advantage → Close structure.</div>
+          </div>
+        </div>
+        <div class="rubric-item">
+          <div class="rubric-pct">15%</div>
+          <div>
+            <div class="rubric-area">Business Plan</div>
+            <div class="rubric-note">Defined TAM (50M US adults), freemium revenue model, competitive landscape, and $150K funding ask with break-even math.</div>
+          </div>
+        </div>
+        <div class="rubric-item">
+          <div class="rubric-pct">15%</div>
+          <div>
+            <div class="rubric-area">Documentation</div>
+            <div class="rubric-note">This one-pager, pitch deck, weekly submissions, and source code — all deliverables covered.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"><span>✦</span></div>
+
+    <!-- 08 PITCH -->
+    <section>
+      <div class="section-tag">08 — The Pitch</div>
+      <h2>In their own words.</h2>
+      <div class="pitch-quote">
+        "Everyone tracks their sleep — but no one remembers their dreams. We built an AI app that does both. You wake up, type 'I was flying over Tokyo but the buildings were made of glass,' and Reverie generates an image of that scene, a soundscape of wind and city lights, and a calm bedtime story narrated by an AI voice — all from your own dream."
+        <cite>— Reverie Founding Team</cite>
+      </div>
+    </section>
+
+    <footer>
+      <p>Reverie · AI Startup Challenge · 8-Week Capstone · Simone, Diego & Megan</p>
+    </footer>
+
+  </div>
+
+  <!-- Our JavaScript -->
+  <script src="js/main.js"></script>
+
+</body>
+</html>

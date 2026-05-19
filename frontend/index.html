@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    // Fast synchronous guard: brand-new users go to the landing page immediately,
+    // before anything renders. Returning users wait for Firebase to confirm the session.
+    if (!localStorage.getItem('reverie_onboarded')) {
+      window.location.href = 'pages/onboarding.html';
+    }
+  </script>
+  <style>
+    /* Hide the dashboard until Firebase confirms the session, preventing a flash
+       of the home screen for users whose session has expired. */
+    body { opacity: 0; transition: opacity 0.25s ease; }
+  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Reverie">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png">
+  <title>Reverie — Home</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    /* ── STAR FIELD ── */
+    #star-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      transition: opacity 0.8s ease;
+    }
+
+    /* hide stars in morning mode */
+    body.morning #star-canvas {
+      opacity: 0;
+    }
+
+    /* make sure app content sits above stars */
+    .app-frame {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── SLEEP TRACKING ── */
+
+    /* Clickable orb */
+    .orb { cursor: pointer; position: relative; }
+
+    /* Ripple on tap — lives inside .orb so it's always centered */
+    @keyframes orb-ripple {
+      0%   { transform: translate(-50%,-50%) scale(0.85); opacity: 0.6; }
+      100% { transform: translate(-50%,-50%) scale(2.8);  opacity: 0;   }
+    }
+    .orb-ripple {
+      position: absolute; top: 50%; left: 50%;
+      width: 140px; height: 140px; border-radius: 50%;
+      border: 2px solid var(--accent-soft);
+      pointer-events: none; z-index: 2;
+      animation: orb-ripple 0.8s ease-out forwards;
+    }
+
+    /* Sleeping orb breathes */
+    @keyframes breathe {
+      0%,100% { transform: scale(0.68); box-shadow: 0 0 28px 8px  rgba(124,58,237,0.18); }
+      50%      { transform: scale(0.76); box-shadow: 0 0 60px 24px rgba(124,58,237,0.42); }
+    }
+    .orb.orb-sleeping {
+      animation: breathe 5s ease-in-out infinite !important;
+      opacity: 0.5;
+    }
+
+    /* Greeting fades when sleeping */
+    .greeting-card { transition: opacity 0.35s ease, transform 0.35s ease; }
+    .greeting-card.fade-out {
+      opacity: 0; transform: translateY(-10px); pointer-events: none;
+    }
+
+    /* ── FULL-SCREEN WIND-DOWN MODAL ── */
+    /* Fixed, outside app-frame — pure opacity transition = no jank */
+    .winddown-modal {
+      position: fixed; inset: 0; z-index: 500;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 36px; padding: 48px 28px;
+      background: rgba(4, 0, 14, 0.93);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.38s ease;
+      will-change: opacity;
+    }
+    .winddown-modal.active { opacity: 1; pointer-events: all; }
+
+    /* Moon inside the modal — same visual as the real orb */
+    .wdm-moon {
+      width: 170px; height: 170px; border-radius: 50%;
+      background: var(--orb-color);
+      box-shadow: 0 0 90px 35px rgba(124,58,237,0.65),
+                  0 0 180px 90px rgba(80,40,140,0.28);
+      animation: float 5s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    /* Card rises up when modal becomes active */
+    .wdm-card {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 14px;
+      width: 100%; max-width: 320px;
+      padding: 28px 28px 24px;
+      background: rgba(22, 2, 50, 0.92);
+      border: 1px solid rgba(155,93,229,0.32);
+      border-radius: 28px;
+      box-shadow: 0 16px 56px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08);
+      transform: translateY(22px);
+      transition: transform 0.5s cubic-bezier(0.34, 1.3, 0.64, 1) 0.08s;
+    }
+    .winddown-modal.active .wdm-card { transform: translateY(0); }
+
+    .wdm-title {
+      font-family: 'Nunito', sans-serif; font-size: 23px;
+      font-weight: 800; color: var(--text); text-align: center;
+    }
+    .wdm-sub {
+      font-size: 13px; color: var(--text-dim);
+      text-align: center; line-height: 1.55;
+    }
+    .wdm-actions { display: flex; gap: 10px; width: 100%; margin-top: 4px; }
+
+    /* ── MORNING MODAL OVERRIDE ── */
+    body.morning .winddown-modal {
+      background: rgba(255, 243, 210, 0.97);
+    }
+    body.morning .wdm-moon {
+      box-shadow: 0 0 90px 35px rgba(255,200,50,0.75),
+                  0 0 180px 90px rgba(255,160,0,0.3);
+    }
+    body.morning .wdm-card {
+      background: rgba(255, 252, 240, 0.98);
+      border-color: rgba(255,175,40,0.45);
+      box-shadow: 0 16px 56px rgba(180,100,0,0.12), inset 0 1px 0 rgba(255,255,255,0.9);
+    }
+    body.morning .wdm-title { color: #2d1500; }
+    body.morning .wdm-sub   { color: #7a4a00; }
+
+    /* ── MORNING CHECK-IN ── */
+    .checkin-card {
+      background: linear-gradient(135deg, rgba(239,100,100,0.1), rgba(124,58,237,0.08));
+      border: 1px solid rgba(239,100,100,0.25); border-radius: 20px;
+      padding: 16px 18px; margin-top: 12px;
+    }
+    .checkin-label { font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(239,100,100,0.7); margin-bottom: 6px; }
+    .checkin-q { font-size: 14px; color: var(--text); margin-bottom: 14px; font-weight: 500; }
+    .checkin-btns { display: flex; gap: 8px; }
+    .checkin-btn {
+      flex: 1; padding: 10px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05); color: var(--text); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s, transform 0.1s; font-family: inherit;
+    }
+    .checkin-btn:active { transform: scale(0.97); }
+    .checkin-btn.yes  { border-color: rgba(239,100,100,0.4); }
+    .checkin-btn.yes:hover  { background: rgba(239,100,100,0.15); }
+    .checkin-btn.no   { border-color: rgba(99,198,155,0.4); }
+    .checkin-btn.no:hover   { background: rgba(99,198,155,0.12); }
+    .checkin-done { font-size: 13px; color: var(--text-dim); text-align: center; padding: 4px 0; }
+
+    /* Sleeping banner in header */
+    .sleep-active-banner {
+      display: none; flex-direction: column;
+      align-items: center; gap: 6px;
+      margin: 0 20px; padding: 24px 24px 20px;
+      background: rgba(22, 2, 50, 0.88);
+      border: 1px solid rgba(155,93,229,0.22); border-radius: 24px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.45);
+    }
+    .sleep-active-banner.open { display: flex; }
+    .sleep-active-banner .sa-label {
+      font-size: 12px; color: var(--text-muted);
+      letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .sleep-active-banner .sa-time {
+      font-family: 'Nunito', sans-serif; font-size: 22px;
+      font-weight: 800; color: var(--text); margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- STAR CANVAS (night mode only) -->
+  <canvas id="star-canvas"></canvas>
+
+  <div class="app-frame">
+
+    <!-- ORB + GREETING -->
+    <div class="header-area">
+      <a href="pages/profile.html" style="position:absolute;top:48px;right:20px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:16px;text-decoration:none;z-index:2;">⚙️</a>
+
+      <div class="orb" id="orb" onclick="handleOrbClick()"></div>
+
+      <div class="greeting-card" id="greeting-card">
+        <h2 id="greeting-text">Good Night!</h2>
+      </div>
+
+      <!-- SLEEPING STATE (shown after sleep session starts) -->
+      <div class="sleep-active-banner" id="sleep-active-banner">
+        <div class="sa-label">Sleeping since</div>
+        <div class="sa-time" id="sleep-since-time">—</div>
+        <button class="btn btn-primary" style="margin-top:4px; min-width:180px;" onclick="logWakeUp()">I'm awake ☀️</button>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content page-content">
+
+      <div class="section-label">Sleep Schedule</div>
+
+      <!-- SLEEP SCHEDULE CARD -->
+      <div class="card" id="sleep-card">
+        <div style="text-align:center; padding:4px 0; color:var(--text-muted); font-size:14px;">Loading...</div>
+      </div>
+
+      <!-- DREAMS + STREAK -->
+      <div class="two-col" style="margin-top:12px;">
+        <div class="card">
+          <div class="card-title" style="font-size:16px;">Dreams</div>
+          <div class="card-value" style="font-size:26px;" id="dream-count">—</div>
+          <div class="card-sub">logged</div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="font-size:16px;">Streak</div>
+          <div class="card-value" style="font-size:26px;" id="streak">—</div>
+          <div class="card-sub" id="streak-unit">nights</div>
+        </div>
+      </div>
+
+      <!-- MORNING CHECK-IN -->
+      <div id="checkin-wrap" style="display:none;">
+        <div class="checkin-card">
+          <div class="checkin-label">Morning check-in</div>
+          <div class="checkin-q">Did you have a nightmare last night?</div>
+          <div class="checkin-btns" id="checkin-btns">
+            <button class="checkin-btn yes" onclick="submitCheckin(true)">😰 Yes</button>
+            <button class="checkin-btn no"  onclick="submitCheckin(false)">😌 No, slept well</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECENT DREAMS PREVIEW -->
+      <div class="section-label" style="margin-top:8px;">Recent Dreams</div>
+      <div id="recent-dreams">
+        <div class="card" style="text-align:center; color:var(--text-muted); font-size:14px; padding:20px;">Loading...</div>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <div class="nav-group">
+        <a class="nav-link active" href="index.html">Home</a>
+        <a class="nav-link" href="pages/dreams.html">Dreams</a>
+      </div>
+      <a class="nav-plus" href="pages/journal.html" title="Log a dream">+</a>
+      <div class="nav-group">
+        <a class="nav-link" href="pages/lucid.html">Lucid</a>
+        <a class="nav-link" href="pages/winddown.html">Wind Down</a>
+      </div>
+    </nav>
+
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/api.js"></script>
+
+  <script type="module">
+    import { requireAuth }                                                                    from './js/auth.js';
+    import { getDreams, getLatestSleepSchedule, getUserProfile, getTodayCheckin, saveNightmareCheckin } from './js/firebase.js';
+
+    let _checkinUid = null;
+    window.submitCheckin = async function(hadNightmare) {
+      if (!_checkinUid) return;
+      const today = new Date().toISOString().slice(0, 10);
+      await saveNightmareCheckin(_checkinUid, today, hadNightmare).catch(() => {});
+      const btns = document.getElementById('checkin-btns');
+      if (hadNightmare) {
+        btns.innerHTML = `<div class="checkin-done">Let's log it — navigating to journal…</div>`;
+        setTimeout(() => { window.location.href = 'pages/journal.html?nightmare=1'; }, 900);
+      } else {
+        btns.innerHTML = `<div class="checkin-done">Great — your IRT practice is working ✓</div>`;
+      }
+    };
+
+    const emotionTagMap = {
+      wonder: 'tag-wonder', anxiety: 'tag-anxiety', joy: 'tag-joy',
+      fear: 'tag-fear', peaceful: 'tag-peaceful', sadness: 'tag-sadness',
+      excitement: 'tag-excitement', nostalgia: 'tag-nostalgia', confusion: 'tag-confusion',
+      hope: 'tag-hope', longing: 'tag-longing', dread: 'tag-dread',
+      awe: 'tag-awe', grief: 'tag-grief', frustration: 'tag-frustration',
+      tenderness: 'tag-tenderness', shame: 'tag-shame', pride: 'tag-pride',
+      restlessness: 'tag-restlessness', relief: 'tag-relief',
+    };
+
+    function fmt12h(t) {
+      if (!t) return '—';
+      const [h, m] = t.split(':').map(Number);
+      return `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h < 12 ? 'AM' : 'PM'}`;
+    }
+
+    function formatDate(ts) {
+      if (!ts) return '';
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function calcStreak(dreams) {
+      if (!dreams.length) return 0;
+      const days = new Set(dreams.map(d => {
+        const date = d.createdAt?.toDate ? d.createdAt.toDate() : new Date(d.createdAt || 0);
+        return date.toISOString().split('T')[0];
+      }));
+      let streak = 0;
+      const cursor = new Date();
+      cursor.setHours(0, 0, 0, 0);
+      while (days.has(cursor.toISOString().split('T')[0])) {
+        streak++;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+      return streak;
+    }
+
+    requireAuth(async user => {
+      document.body.style.opacity = '1';
+      _checkinUid = user.uid;
+
+      const [dreams, schedule, profile, todayCheckin] = await Promise.all([
+        getDreams(user.uid).catch(() => []),
+        getLatestSleepSchedule(user.uid).catch(() => null),
+        getUserProfile(user.uid).catch(() => null),
+        getTodayCheckin(user.uid).catch(() => null),
+      ]);
+
+      // Show check-in if user has a rescripted dream and hasn't answered today
+      const hasRescripted = dreams.some(d => d.rescriptedText);
+      if (hasRescripted && !todayCheckin) {
+        document.getElementById('checkin-wrap').style.display = 'block';
+      }
+
+      // ── Greeting ──
+      const raw = (user.displayName || profile?.name || '').split(' ')[0];
+      const firstName = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+      const greetingEl = document.getElementById('greeting-text');
+      if (greetingEl && firstName) {
+        const isMorning = new Date().getHours() >= 6 && new Date().getHours() < 18;
+        greetingEl.textContent = `${isMorning ? 'Good Morning' : 'Good Night'} ${firstName}!`;
+      }
+
+      // ── Sleep Schedule card ──
+      const sleepCard = document.getElementById('sleep-card');
+      if (schedule?.bedtime) {
+        sleepCard.innerHTML = `
+          <div class="card-title">Target Schedule</div>
+          <div class="card-value" id="sleep-duration">${schedule.targetSleepHours ?? '—'}h</div>
+          <div class="card-sub">Bedtime ${fmt12h(schedule.bedtime)} · Wake ${fmt12h(schedule.wakeTime)}</div>`;
+      } else {
+        sleepCard.innerHTML = `
+          <div style="text-align:center; padding:4px 0;">
+            <div style="color:var(--text-muted); font-size:14px; margin-bottom:8px;">No sleep schedule yet</div>
+            <a href="pages/profile.html" style="color:var(--accent-soft); font-size:13px; text-decoration:none;">Set one up in Profile →</a>
+          </div>`;
+      }
+
+      // ── Dream count + streak ──
+      document.getElementById('dream-count').textContent = dreams.length;
+      const streak = calcStreak(dreams);
+      document.getElementById('streak').textContent = streak;
+      document.getElementById('streak-unit').textContent = streak === 1 ? 'night' : 'nights';
+
+      // ── Recent dreams ──
+      const container = document.getElementById('recent-dreams');
+      if (!dreams.length) {
+        container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted); font-size:14px; padding:20px;">No dreams logged yet.<br><a href="pages/journal.html" style="color:var(--accent-soft); text-decoration:none;">Log your first dream →</a></div>`;
+        return;
+      }
+      container.innerHTML = dreams.slice(0, 2).map(d => {
+        const tags = (d.emotions || []).slice(0, 3).map(e => {
+          const cls = emotionTagMap[e.toLowerCase()] || '';
+          return `<span class="tag ${cls}">${e}</span>`;
+        }).join('');
+        const preview = (d.text || d.summary || '').slice(0, 80) + ((d.text || '').length > 80 ? '…' : '');
+        const isNightmare = d.isNightmare ?? false;
+        return `<div class="dream-card" onclick="window.location.href='pages/dream.html?id=${d.id}'" style="cursor:pointer;">
+          <div style="display:flex;align-items:center;">
+            <div class="dream-date">${formatDate(d.createdAt)}</div>
+            ${isNightmare ? '<span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:rgba(239,100,100,0.9);background:rgba(239,100,100,0.12);border:1px solid rgba(239,100,100,0.2);border-radius:20px;padding:2px 8px;margin-left:6px;">nightmare</span>' : ''}
+            ${d.lucid ? '<span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:rgba(155,93,229,0.9);background:rgba(155,93,229,0.12);border:1px solid rgba(155,93,229,0.2);border-radius:20px;padding:2px 8px;margin-left:4px;">lucid</span>' : ''}
+          </div>
+          <div class="dream-preview">${preview}</div>
+          <div>${tags}</div>
+        </div>`;
+      }).join('');
+    });
+  </script>
+
+  <!-- WIND-DOWN MODAL — fixed, outside app-frame, perfectly centered -->
+  <div id="winddown-modal" class="winddown-modal">
+    <div class="wdm-moon"></div>
+    <div class="wdm-card">
+      <div class="wdm-title">Ready to wind down?</div>
+      <div class="wdm-sub">Reverie will track how long you sleep tonight.</div>
+      <div class="wdm-actions">
+        <button class="btn btn-primary" style="flex:1;" onclick="startSleep()">Yes, let's go</button>
+        <button class="btn btn-ghost" style="width:46px;" onclick="cancelWinddown()">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── SLEEP TRACKING ──
+    function spawnRipple() {
+      const orb = document.getElementById('orb');
+      const r = document.createElement('div');
+      r.className = 'orb-ripple';
+      orb.appendChild(r);
+      r.addEventListener('animationend', () => r.remove());
+    }
+
+    function handleOrbClick() {
+      if (localStorage.getItem('reverie_sleep_start')) return;
+      spawnRipple();
+      const isMorning = document.body.classList.contains('morning');
+      document.querySelector('.wdm-title').textContent = isMorning ? 'Good morning! ☀️' : 'Ready to wind down?';
+      document.querySelector('.wdm-sub').textContent   = isMorning
+        ? 'Log last night\'s dream before it fades.'
+        : 'Reverie will track how long you sleep tonight.';
+      const confirmBtn = document.querySelector('.wdm-actions .btn-primary');
+      confirmBtn.textContent  = isMorning ? 'Log a dream' : 'Yes, let\'s go';
+      confirmBtn.onclick      = isMorning ? () => window.location.href = 'pages/journal.html' : startSleep;
+      setTimeout(() => document.getElementById('winddown-modal').classList.add('active'), 80);
+    }
+
+    function cancelWinddown() {
+      document.getElementById('winddown-modal').classList.remove('active');
+    }
+
+    function startSleep() {
+      const now = new Date();
+      localStorage.setItem('reverie_sleep_start', now.toISOString());
+      document.getElementById('winddown-modal').classList.remove('active');
+      applySleepingState(now);
+    }
+
+    function applySleepingState(startTime) {
+      document.getElementById('orb').classList.add('orb-sleeping');
+      document.getElementById('greeting-card').classList.add('fade-out');
+      const canvas = document.getElementById('star-canvas');
+      if (canvas) canvas.style.opacity = '0.18';
+      const timeStr = startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      document.getElementById('sleep-since-time').textContent = timeStr;
+      document.getElementById('sleep-active-banner').classList.add('open');
+    }
+
+    function logWakeUp() {
+      const raw = localStorage.getItem('reverie_sleep_start');
+      if (!raw) return;
+      const start    = new Date(raw);
+      const end      = new Date();
+      const totalMin = Math.round((end - start) / 60000);
+      const hours    = Math.floor(totalMin / 60);
+      const mins     = totalMin % 60;
+      localStorage.removeItem('reverie_sleep_start');
+      localStorage.setItem('reverie_last_sleep', JSON.stringify({ start: raw, end: end.toISOString(), hours, mins }));
+
+      document.getElementById('orb').classList.remove('orb-sleeping');
+      const canvas = document.getElementById('star-canvas');
+      if (canvas) canvas.style.opacity = '';
+
+      const banner = document.getElementById('sleep-active-banner');
+      banner.innerHTML = `
+        <div class="sa-label">You slept</div>
+        <div class="sa-time">${hours}h ${mins}m</div>
+        <button class="btn btn-primary" style="margin-top:8px; min-width:200px;"
+          onclick="document.getElementById('sleep-active-banner').classList.remove('open');
+                   document.getElementById('greeting-card').classList.remove('fade-out');
+                   window.location.href='pages/journal.html'">
+          Log a dream 🌙
+        </button>`;
+    }
+
+    (function () {
+      const raw = localStorage.getItem('reverie_sleep_start');
+      if (raw) applySleepingState(new Date(raw));
+    })();
+  </script>
+
+  <script>
+    // ── STAR FIELD ──
+    // Uses a canvas so stars sit behind everything cleanly
+    const canvas = document.getElementById('star-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let stars = [];
+
+    function resizeCanvas() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function createStars(count = 160) {
+      stars = [];
+      for (let i = 0; i < count; i++) {
+        stars.push({
+          x:       Math.random() * canvas.width,
+          y:       Math.random() * canvas.height,
+          r:       Math.random() * 1.4 + 0.3,          // radius 0.3–1.7px
+          opacity: Math.random() * 0.5 + 0.1,          // base opacity
+          speed:   Math.random() * 0.008 + 0.003,       // twinkle speed
+          phase:   Math.random() * Math.PI * 2,         // twinkle offset
+        });
+      }
+    }
+
+    function drawStars(timestamp) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      stars.forEach(s => {
+        // Twinkle: sine wave on opacity
+        const twinkle = Math.sin(timestamp * s.speed + s.phase);
+        const alpha   = s.opacity + twinkle * 0.25;
+
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0, alpha)})`;
+        ctx.fill();
+      });
+
+      requestAnimationFrame(drawStars);
+    }
+
+    resizeCanvas();
+    createStars();
+    requestAnimationFrame(drawStars);
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      createStars();
+    });
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+  </script>
+
+</body>
+</html>

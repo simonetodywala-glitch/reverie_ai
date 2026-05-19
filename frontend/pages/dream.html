@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Reverie — Dream</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .dream-text {
+      font-size: 15px; line-height: 1.75; color: var(--text-dim);
+      background: var(--surface); border-radius: 14px;
+      padding: 16px 18px; margin-top: 8px;
+    }
+    .emotion-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+    .theme-item {
+      font-size: 14px; color: var(--text-dim); line-height: 1.6;
+      padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .theme-item:last-child { border-bottom: none; }
+    .reflection-list { list-style: none; padding: 0; margin: 8px 0 0; }
+    .reflection-list li {
+      font-size: 14px; color: var(--text-dim); line-height: 1.6;
+      padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .reflection-list li:last-child { border-bottom: none; }
+    .reflection-list li::before { content: "✦ "; opacity: 0.5; }
+    .chat-teaser {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface); border-radius: 14px;
+      padding: 16px 18px; margin-top: 8px;
+      border: 1px dashed rgba(155,93,229,0.3);
+    }
+    .chat-teaser-icon { font-size: 24px; flex-shrink: 0; opacity: 0.6; }
+    .chat-teaser-text { font-size: 14px; color: var(--text-dim); line-height: 1.5; }
+    .chat-teaser-label { font-size: 12px; font-weight: 700; color: var(--accent-soft); margin-bottom: 2px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .summarize-analysis-btn {
+      margin-top: 18px;
+      width: 100%;
+      padding: 12px;
+      border-radius: 100px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(240,232,255,0.7);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .summarize-analysis-btn:active { background: rgba(124,58,237,0.2); }
+
+    .reanalyze-panel {
+      margin-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding-top: 20px;
+    }
+    .reanalyze-context {
+      width: 100%; font-size: 14px; margin-top: 8px;
+    }
+    .connection-box {
+      background: rgba(124,58,237,0.08);
+      border: 1px solid rgba(124,58,237,0.2);
+      border-radius: 14px; padding: 14px 16px;
+      font-size: 14px; color: var(--text-dim); line-height: 1.65;
+    }
+    .mind-note-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; padding: 14px 16px;
+      font-size: 13px; color: var(--text-muted); line-height: 1.6; font-style: italic;
+    }
+    .saved-badge {
+      display: inline-block; font-size: 12px; color: #6fcf97;
+      margin-left: 8px; opacity: 0; transition: opacity 0.4s;
+    }
+    .saved-badge.show { opacity: 1; }
+
+    /* ── SOUNDSCAPE ── */
+    .soundscape-panel {
+      margin-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding-top: 20px;
+    }
+    .soundscape-player {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--surface); border-radius: 16px;
+      padding: 14px 16px; margin-top: 10px;
+    }
+    .soundscape-play-btn {
+      width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      border: none; color: #fff; font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 14px rgba(124,58,237,0.45);
+    }
+    .soundscape-play-btn:active { transform: scale(0.92); }
+    .soundscape-info { flex: 1; min-width: 0; }
+    .soundscape-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .soundscape-sub   { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .soundscape-bars  {
+      display: flex; align-items: center; gap: 2px; height: 24px; flex-shrink: 0;
+    }
+    .soundscape-bar {
+      width: 3px; border-radius: 2px;
+      background: var(--accent-soft); opacity: 0.4;
+    }
+    .soundscape-bars.playing .soundscape-bar { opacity: 0.85; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(1) { animation: sbar 0.9s ease-in-out infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(2) { animation: sbar 0.9s ease-in-out 0.15s infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(3) { animation: sbar 0.9s ease-in-out 0.3s infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(4) { animation: sbar 0.9s ease-in-out 0.45s infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(5) { animation: sbar 0.9s ease-in-out 0.6s infinite; }
+    @keyframes sbar {
+      0%,100% { height: 6px; }
+      50%      { height: 20px; }
+    }
+
+    /* ── LUCID TOGGLE ── */
+    .lucid-toggle { display: flex; align-items: center; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.07); }
+    .lucid-toggle-label { font-size: 13px; color: var(--text-dim); flex: 1; }
+    .lucid-switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .lucid-switch input { opacity: 0; width: 0; height: 0; }
+    .lucid-slider { position: absolute; inset: 0; background: rgba(255,255,255,0.1); border-radius: 24px; cursor: pointer; transition: 0.25s; }
+    .lucid-slider:before { content:''; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:0.25s; }
+    .lucid-switch input:checked + .lucid-slider { background: rgba(155,93,229,0.75); }
+    .lucid-switch input:checked + .lucid-slider:before { transform: translateX(20px); }
+    .lucid-badge-inline { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(155,93,229,0.9); background: rgba(155,93,229,0.12); border-radius: 20px; padding: 2px 8px; margin-left: 4px; }
+
+    /* ── IRT PANEL ── */
+    .irt-panel { margin-top: 24px; border-top: 1px solid rgba(255,255,255,0.07); padding-top: 20px; }
+    .irt-badge {
+      display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; color: rgba(239,100,100,0.85);
+      background: rgba(239,100,100,0.1); border: 1px solid rgba(239,100,100,0.2);
+      border-radius: 20px; padding: 2px 9px; margin-left: 8px; vertical-align: middle;
+    }
+    .irt-result {
+      margin-top: 14px; background: rgba(124,58,237,0.07);
+      border: 1px solid rgba(155,93,229,0.2); border-radius: 16px; padding: 16px;
+    }
+    .irt-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-soft); margin-bottom: 10px; }
+    .irt-text  { font-size: 14px; color: var(--text-dim); line-height: 1.75; max-height: 260px; overflow-y: auto; }
+    .irt-text::-webkit-scrollbar { width: 3px; }
+    .irt-text::-webkit-scrollbar-thumb { background: rgba(155,93,229,0.35); border-radius: 3px; }
+    .irt-actions { display: flex; gap: 8px; margin-top: 14px; }
+
+    /* ── FLOATING CHAT ── */
+    .chat-fab {
+      position: fixed;
+      bottom: 88px; right: 20px;
+      width: 52px; height: 52px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      border: none; color: #fff; font-size: 22px;
+      cursor: pointer; z-index: 200;
+      box-shadow: 0 4px 20px rgba(124,58,237,0.55);
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .chat-fab:active { transform: scale(0.9); }
+    .chat-fab.open   { transform: scale(0.85); box-shadow: 0 2px 12px rgba(124,58,237,0.35); }
+
+    .chat-panel {
+      position: fixed;
+      bottom: 88px; right: 12px;
+      width: min(340px, calc(100vw - 24px));
+      height: 460px;
+      background: var(--bg-2);
+      border: 1px solid rgba(155,93,229,0.25);
+      border-radius: 24px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.55);
+      display: flex; flex-direction: column;
+      z-index: 199; overflow: hidden;
+      transform: scale(0.88) translateY(16px);
+      transform-origin: bottom right;
+      opacity: 0; pointer-events: none;
+      transition: transform 0.3s cubic-bezier(0.34,1.3,0.64,1), opacity 0.22s ease;
+    }
+    .chat-panel.open {
+      transform: scale(1) translateY(0);
+      opacity: 1; pointer-events: all;
+    }
+
+    .chat-panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 15px 18px 13px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.02);
+    }
+    .chat-panel-title {
+      font-family: 'Nunito', sans-serif; font-weight: 800;
+      font-size: 15px; color: var(--text);
+    }
+    .chat-panel-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .chat-close {
+      background: none; border: none; color: var(--text-muted);
+      font-size: 15px; cursor: pointer; padding: 4px 8px;
+      border-radius: 8px; transition: background 0.15s;
+    }
+    .chat-close:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+
+    .chat-messages {
+      flex: 1; overflow-y: auto; padding: 14px 14px 8px;
+      display: flex; flex-direction: column; gap: 8px;
+      scroll-behavior: smooth;
+    }
+    .chat-messages::-webkit-scrollbar { width: 3px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: rgba(155,93,229,0.3); border-radius: 4px; }
+
+    .chat-msg {
+      max-width: 86%; padding: 10px 13px;
+      font-size: 13.5px; line-height: 1.55; border-radius: 16px;
+    }
+    .chat-msg.ai   { background: var(--surface); color: var(--text-dim); align-self: flex-start; border-bottom-left-radius: 4px; }
+    .chat-msg.user { background: var(--accent);  color: #fff;            align-self: flex-end;   border-bottom-right-radius: 4px; }
+    .chat-msg.typing { background: var(--surface); color: var(--text-muted); align-self: flex-start; border-bottom-left-radius: 4px; letter-spacing: 3px; }
+
+    .chat-input-row {
+      display: flex; gap: 8px; padding: 10px 12px 12px;
+      border-top: 1px solid rgba(255,255,255,0.07); flex-shrink: 0;
+    }
+    #chat-input {
+      flex: 1; background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 14px;
+      padding: 9px 13px; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 13.5px; outline: none;
+      resize: none; transition: border-color 0.2s;
+    }
+    #chat-input:focus { border-color: rgba(155,93,229,0.5); }
+    .chat-send {
+      width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+      background: var(--accent); border: none; color: #fff; font-size: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .chat-send:hover   { background: var(--accent-soft); }
+    .chat-send:active  { transform: scale(0.9); }
+    .chat-send:disabled { opacity: 0.35; cursor: default; }
+  </style>
+</head>
+<body>
+  <div class="app-frame">
+
+    <div class="page-header">
+      <a href="dreams.html" style="color:var(--text-dim); text-decoration:none; font-size:14px;">← Back</a>
+      <div id="dream-date" style="margin-top:6px;">🌙 Dream</div>
+    </div>
+
+    <div class="main-content page-content" id="dream-content">
+      <div style="text-align:center; padding:60px 0; color:var(--text-dim); font-size:14px;">Loading...</div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <div class="nav-group">
+        <a class="nav-link" href="../index.html">Home</a>
+        <a class="nav-link active" href="dreams.html">Dreams</a>
+      </div>
+      <a class="nav-plus" href="journal.html">+</a>
+      <div class="nav-group">
+        <a class="nav-link" href="lucid.html">Lucid</a>
+        <a class="nav-link" href="winddown.html">Wind Down</a>
+      </div>
+    </nav>
+
+  </div>
+
+  <!-- CHAT FAB -->
+  <button class="chat-fab" id="chat-fab" onclick="toggleChat()" title="Chat about this dream">💬</button>
+
+  <!-- CHAT PANEL -->
+  <div class="chat-panel" id="chat-panel">
+    <div class="chat-panel-header">
+      <div>
+        <div class="chat-panel-title">Chat with Reverie</div>
+        <div class="chat-panel-sub">Explore this dream together</div>
+      </div>
+      <button class="chat-close" onclick="toggleChat()">✕</button>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-row">
+      <textarea id="chat-input" placeholder="Ask about this dream…" rows="1"></textarea>
+      <button class="chat-send" id="chat-send" onclick="sendMessage()">↑</button>
+    </div>
+  </div>
+
+  <script src="../js/app.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/soundscapes.js"></script>
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    import { getDream, updateDream, getUserProfile, saveChatHistory, getChatHistory, saveRescriptedDream } from '../js/firebase.js';
+
+    const emotionTags = {
+      wonder: 'tag-wonder', anxiety: 'tag-anxiety', joy: 'tag-joy',
+      fear: 'tag-fear', peaceful: 'tag-peaceful', sadness: 'tag-sadness',
+      excitement: 'tag-excitement', nostalgia: 'tag-nostalgia', confusion: 'tag-confusion',
+      hope: 'tag-hope', longing: 'tag-longing', dread: 'tag-dread',
+      awe: 'tag-awe', grief: 'tag-grief', frustration: 'tag-frustration',
+      tenderness: 'tag-tenderness', shame: 'tag-shame', pride: 'tag-pride',
+      restlessness: 'tag-restlessness', relief: 'tag-relief',
+    };
+
+    const dreamId = new URLSearchParams(window.location.search).get('id');
+    let currentUser  = null;
+    let currentDream = null;
+    let userProfile  = null;
+
+    function formatDate(ts) {
+      const date = ts?.toDate ? ts.toDate() : new Date(ts);
+      return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    function esc(str) {
+      return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function analysisHtml(dream) {
+      const emotionsHtml = (dream.emotions || []).map(e => {
+        const cls = emotionTags[e.toLowerCase()] || '';
+        return `<span class="tag ${cls}">${esc(e)}</span>`;
+      }).join('');
+
+      const themesHtml = (dream.themes || []).map(t =>
+        `<div class="theme-item">• ${esc(t)}</div>`
+      ).join('');
+
+      let h = `
+        <div id="analysis-block">
+          <div class="ai-response" style="margin-top:16px;">
+            <div class="ai-label">🤖 Analysis</div>
+
+            <div class="section-label" style="margin-top:12px;">Emotions detected</div>
+            <div class="emotion-row">${emotionsHtml}</div>
+
+            <div class="section-label" style="margin-top:12px;">Themes &amp; symbols</div>
+            <div style="margin-top:4px;">${themesHtml || '<div class="theme-item" style="opacity:0.5;">No themes recorded</div>'}</div>
+
+            <div class="section-label" style="margin-top:16px;">Summary</div>
+            <div class="ai-text" style="margin-top:6px;">${esc(dream.summary || '')}</div>`;
+
+      if (dream.interpretation) {
+        h += `
+            <div class="section-label" style="margin-top:16px;">Deeper interpretation</div>
+            <div class="ai-text" style="font-size:14px; line-height:1.7; margin-top:6px;">${esc(dream.interpretation)}</div>`;
+      }
+
+      if (dream.waking_connections) {
+        h += `
+            <div class="section-label" style="margin-top:16px;">Waking life connection</div>
+            <div class="connection-box">${esc(dream.waking_connections)}</div>`;
+      }
+
+      if (dream.mind_note) {
+        h += `
+            <div class="section-label" style="margin-top:16px;">Your mind's processing style</div>
+            <div class="mind-note-box">${esc(dream.mind_note)}</div>`;
+      }
+
+      if (dream.reflections?.length) {
+        h += `
+            <div class="section-label" style="margin-top:16px;">Reflect on this</div>
+            <ul class="reflection-list">
+              ${dream.reflections.map(r => `<li>${esc(r)}</li>`).join('')}
+            </ul>`;
+      }
+
+      h += `
+          <button class="summarize-analysis-btn" onclick="summarizeAnalysis()">📝 Summarize Analysis</button>
+          <div id="analysis-summary-block" style="display:none;margin-top:10px;">
+            <div class="ai-text" id="analysis-summary-text" style="font-size:14px;line-height:1.7;opacity:0.75;"></div>
+          </div>
+        </div></div>`;
+      return h;
+    }
+
+    function render(dream) {
+      document.getElementById('dream-date').textContent = `🌙 ${formatDate(dream.createdAt)}`;
+
+      const html = `
+        <div class="section-label">What you dreamed</div>
+        <div class="dream-text">${esc(dream.text || '')}</div>
+
+        ${analysisHtml(dream)}
+
+        <div class="reanalyze-panel">
+          <div class="section-label">Re-analyze this dream</div>
+          <div style="font-size:13px; color:var(--text-muted); margin-bottom:10px; line-height:1.5;">
+            Add today's context or updated information to get a fresh perspective.
+          </div>
+          <textarea
+            id="reanalyze-context"
+            class="reanalyze-context"
+            rows="2"
+            placeholder="What's on your mind now? Any new stressors or reflections since you had this dream… (optional)"
+            maxlength="400"
+          ></textarea>
+          <button class="btn btn-ghost" style="margin-top:10px; width:100%;" onclick="runReanalyze()">
+            🔄 Re-analyze
+          </button>
+          <div id="reanalyze-loading" style="display:none; text-align:center; padding:16px 0;">
+            <div class="spinner"></div>
+            <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">Analyzing…</p>
+          </div>
+          <div id="save-row" style="display:none; margin-top:10px; display:none; align-items:center; gap:10px;">
+            <button class="btn btn-primary" style="flex:1;" onclick="saveReanalysis()">💾 Save updated analysis</button>
+            <span class="saved-badge" id="saved-badge">✓ Saved</span>
+          </div>
+        </div>
+
+        <div class="soundscape-panel">
+          <div class="section-label">Dream Soundscape</div>
+          <div style="font-size:13px; color:var(--text-muted); margin-bottom:10px; line-height:1.5;">
+            Generate an ambient soundscape matched to this dream's mood.
+          </div>
+          <button class="btn btn-ghost" style="width:100%;" id="soundscape-btn" onclick="generateSoundscape()">
+            🎧 Play Soundscape
+          </button>
+          <div id="soundscape-player" style="display:none;">
+            <div class="soundscape-player">
+              <button class="soundscape-play-btn" id="play-btn" onclick="toggleSoundscape()">▶</button>
+              <div class="soundscape-info">
+                <div class="soundscape-title">Dream Soundscape</div>
+                <div class="soundscape-sub" id="soundscape-sub">Tap to play · Loops automatically</div>
+              </div>
+              <div class="soundscape-bars" id="soundscape-bars">
+                <div class="soundscape-bar" style="height:10px;"></div>
+                <div class="soundscape-bar" style="height:16px;"></div>
+                <div class="soundscape-bar" style="height:8px;"></div>
+                <div class="soundscape-bar" style="height:14px;"></div>
+                <div class="soundscape-bar" style="height:6px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="irt-panel">
+          <div style="display:flex; align-items:center; margin-bottom:8px;">
+            <div class="section-label" style="margin:0;">Imagery Rehearsal</div>
+            ${dream.isNightmare ? '<span class="irt-badge">nightmare</span>' : ''}
+          </div>
+          <div style="font-size:13px; color:var(--text-muted); margin-bottom:12px; line-height:1.5;">
+            Rewrite this dream with a calmer, more empowering ending. Rehearsing the new version nightly is proven to reduce nightmares.
+          </div>
+          ${dream.rescriptedText ? `
+            <div class="irt-result">
+              <div class="irt-label">Rescripted version</div>
+              <div class="irt-text">${esc(dream.rescriptedText)}</div>
+              <div class="irt-actions">
+                <button class="btn btn-ghost" style="flex:1;" id="irt-listen-btn" onclick="listenRescript()">🎧 Listen</button>
+                <button class="btn btn-ghost" style="flex:1; opacity:0.5;" disabled>✓ Saved</button>
+              </div>
+            </div>
+          ` : `
+            <button class="btn btn-ghost" style="width:100%;" id="irt-btn" onclick="runRescript()">✦ Rescript this dream</button>
+            <div id="irt-loading" style="display:none; text-align:center; padding:16px 0;">
+              <div class="spinner"></div>
+              <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">Rewriting your dream…</p>
+            </div>
+            <div class="irt-result" id="irt-result" style="display:none;">
+              <div class="irt-label">Rescripted version</div>
+              <div class="irt-text" id="irt-text"></div>
+              <div class="irt-actions">
+                <button class="btn btn-ghost" style="flex:1;" id="irt-listen-btn" onclick="listenRescript()">🎧 Listen</button>
+                <button class="btn btn-ghost" style="flex:1;" id="irt-save-btn" onclick="saveRescript()">💾 Save for rehearsal</button>
+              </div>
+            </div>
+          `}
+          <div style="margin-top:14px; font-size:11px; color:rgba(255,255,255,0.25); line-height:1.6; border-top:1px solid rgba(255,255,255,0.05); padding-top:10px;">
+            Reverie's IRT tools are for wellness purposes only and are not a substitute for professional therapy. For severe or trauma-related nightmares, please consult a mental health professional.
+          </div>
+        </div>
+
+        <div class="lucid-toggle">
+          <div class="lucid-toggle-label">
+            This was a lucid dream
+            ${dream.lucid ? '<span class="lucid-badge-inline">lucid</span>' : ''}
+          </div>
+          <label class="lucid-switch">
+            <input type="checkbox" id="lucid-check" ${dream.lucid ? 'checked' : ''} onchange="toggleLucid(this.checked)">
+            <span class="lucid-slider"></span>
+          </label>
+        </div>
+      `;
+
+      document.getElementById('dream-content').innerHTML = html;
+    }
+
+    async function runReanalyze() {
+      const context = document.getElementById('reanalyze-context').value.trim();
+      document.getElementById('reanalyze-loading').style.display = 'block';
+      document.querySelector('.reanalyze-panel .btn-ghost').style.display = 'none';
+      document.getElementById('save-row').style.display = 'none';
+
+      try {
+        const fresh = await analyzeDream(currentDream.text, {
+          wakingContext: context || null,
+          eyeDominance:  userProfile?.eyeDominance || null,
+          handedness:    userProfile?.handedness   || null,
+        });
+        currentDream = { ...currentDream, ...fresh };
+        document.getElementById('analysis-block').outerHTML = analysisHtml(currentDream);
+        document.getElementById('save-row').style.display = 'flex';
+      } catch (err) {
+        alert('Re-analysis failed. Please check your connection and try again.');
+        console.error(err);
+      } finally {
+        document.getElementById('reanalyze-loading').style.display = 'none';
+        document.querySelector('.reanalyze-panel .btn-ghost').style.display = 'block';
+      }
+    }
+
+    async function saveReanalysis() {
+      if (!currentUser || !dreamId) return;
+      const btn = document.querySelector('#save-row .btn-primary');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      try {
+        await updateDream(currentUser.uid, dreamId, {
+          emotions:          currentDream.emotions,
+          themes:            currentDream.themes,
+          summary:           currentDream.summary,
+          interpretation:    currentDream.interpretation,
+          reflections:       currentDream.reflections,
+          waking_connections: currentDream.waking_connections || null,
+          mind_note:         currentDream.mind_note || null,
+        });
+        const badge = document.getElementById('saved-badge');
+        badge.classList.add('show');
+        btn.textContent = '💾 Save updated analysis';
+        btn.disabled = false;
+        setTimeout(() => badge.classList.remove('show'), 2500);
+      } catch (err) {
+        alert('Could not save. Please try again.');
+        btn.textContent = '💾 Save updated analysis';
+        btn.disabled = false;
+      }
+    }
+
+    window.runReanalyze   = runReanalyze;
+    window.saveReanalysis = saveReanalysis;
+
+    // ── IRT ──
+    let irtAudio   = null;
+    let irtPlaying = false;
+    let irtPendingText = null;
+
+    async function runRescript() {
+      const btn = document.getElementById('irt-btn');
+      const loading = document.getElementById('irt-loading');
+      const resultDiv = document.getElementById('irt-result');
+      const textDiv = document.getElementById('irt-text');
+
+      btn.style.display = 'none';
+      loading.style.display = 'block';
+      resultDiv.style.display = 'none';
+
+      try {
+        const data = await rescriptDream(
+          currentDream.text,
+          currentDream.emotions || [],
+          currentDream.themes   || []
+        );
+        irtPendingText = data.rescripted_text;
+        textDiv.textContent = irtPendingText;
+        resultDiv.style.display = 'block';
+      } catch (err) {
+        alert('Rescript failed. Please try again.');
+        btn.style.display = 'block';
+      } finally {
+        loading.style.display = 'none';
+      }
+    }
+
+    async function saveRescript() {
+      if (!currentUser || !dreamId || !irtPendingText) return;
+      const btn = document.getElementById('irt-save-btn');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      try {
+        await saveRescriptedDream(currentUser.uid, dreamId, irtPendingText);
+        currentDream.rescriptedText = irtPendingText;
+        btn.textContent = '✓ Saved';
+      } catch (err) {
+        alert('Could not save. Please try again.');
+        btn.disabled = false;
+        btn.textContent = '💾 Save for rehearsal';
+      }
+    }
+
+    async function listenRescript() {
+      const text = irtPendingText || currentDream.rescriptedText;
+      if (!text) return;
+
+      const btn = document.getElementById('irt-listen-btn');
+
+      if (irtPlaying && irtAudio) {
+        irtAudio.pause();
+        irtAudio.currentTime = 0;
+        irtAudio = null;
+        irtPlaying = false;
+        btn.textContent = '🎧 Listen';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Loading…';
+      try {
+        const url = await readStoryTTS(text, currentDream.emotions || [], currentDream.themes || []);
+        irtAudio = new Audio(url);
+        irtAudio.onended = () => {
+          irtPlaying = false;
+          btn.textContent = '🎧 Listen';
+          btn.disabled = false;
+        };
+        irtAudio.play();
+        irtPlaying = true;
+        btn.textContent = '⏹ Stop';
+        btn.disabled = false;
+      } catch (err) {
+        alert(`Voice error: ${err.message}`);
+        btn.textContent = '🎧 Listen';
+        btn.disabled = false;
+      }
+    }
+
+    window.runRescript    = runRescript;
+    window.saveRescript   = saveRescript;
+    window.listenRescript = listenRescript;
+
+    // ── LUCID TOGGLE ──
+    window.summarizeAnalysis = async function() {
+      if (!currentDream) return;
+      const btn = document.querySelector('.summarize-analysis-btn');
+      const summaryEl  = document.getElementById('analysis-summary-text');
+      const summaryBlk = document.getElementById('analysis-summary-block');
+      btn.textContent = '...';
+      btn.disabled = true;
+      summaryBlk.style.display = 'none';
+      try {
+        const parts = [
+          currentDream.summary        ? `Summary: ${currentDream.summary}` : '',
+          currentDream.interpretation ? `Interpretation: ${currentDream.interpretation}` : '',
+          currentDream.emotions?.length ? `Emotions: ${currentDream.emotions.join(', ')}` : '',
+          currentDream.themes?.length   ? `Themes: ${currentDream.themes.join(', ')}` : '',
+        ].filter(Boolean).join('\n\n');
+
+        if (!parts) {
+          summaryEl.textContent = 'No analysis found for this dream. Try re-analyzing it first.';
+          summaryBlk.style.display = 'block';
+          return;
+        }
+
+        const res = await fetch(`${BASE_URL}/dreams/summarize`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...await _authHeaders() },
+          body: JSON.stringify({ dream_text: parts })
+        });
+        if (!res.ok) throw new Error(`${res.status}`);
+        const data = await res.json();
+        summaryEl.textContent = data.summary || '';
+        summaryBlk.style.display = 'block';
+        btn.textContent = '📝 Summarize Analysis';
+      } catch(e) {
+        summaryEl.textContent = 'Could not summarize — backend may be waking up. Try again in a moment.';
+        summaryBlk.style.display = 'block';
+        btn.textContent = '📝 Summarize Analysis';
+      } finally {
+        btn.disabled = false;
+      }
+    };
+
+    async function toggleLucid(isLucid) {
+      if (!currentUser || !dreamId) return;
+      currentDream.lucid = isLucid;
+      await updateDream(currentUser.uid, dreamId, { lucid: isLucid }).catch(console.error);
+    }
+    window.toggleLucid = toggleLucid;
+
+    // ── SOUNDSCAPE ──
+    function generateSoundscape() {
+      const mood = SoundscapePlayer.emotionsToMood(currentDream.emotions || []);
+      SoundscapePlayer.play(mood);
+
+      document.getElementById('soundscape-btn').style.display = 'none';
+      document.getElementById('soundscape-player').style.display = 'block';
+      document.getElementById('play-btn').textContent = '⏸';
+      document.getElementById('soundscape-bars').classList.add('playing');
+      document.getElementById('soundscape-sub').textContent = 'Now playing · Looping';
+    }
+
+    function toggleSoundscape() {
+      if (SoundscapePlayer.isPlaying()) {
+        SoundscapePlayer.pause();
+        document.getElementById('play-btn').textContent = '▶';
+        document.getElementById('soundscape-bars').classList.remove('playing');
+        document.getElementById('soundscape-sub').textContent = 'Paused';
+      } else {
+        SoundscapePlayer.resume();
+        document.getElementById('play-btn').textContent = '⏸';
+        document.getElementById('soundscape-bars').classList.add('playing');
+        document.getElementById('soundscape-sub').textContent = 'Now playing · Looping';
+      }
+    }
+
+    window.generateSoundscape = generateSoundscape;
+    window.toggleSoundscape   = toggleSoundscape;
+
+    // ── CHAT ──
+    let chatHistory = [];
+    let chatOpen    = false;
+
+    async function toggleChat() {
+      chatOpen = !chatOpen;
+      document.getElementById('chat-panel').classList.toggle('open', chatOpen);
+      document.getElementById('chat-fab').classList.toggle('open', chatOpen);
+
+      if (chatOpen && chatHistory.length === 0 && currentUser && dreamId) {
+        const saved = await getChatHistory(currentUser.uid, dreamId).catch(() => []);
+        if (saved.length > 0) {
+          chatHistory = saved;
+          saved.forEach(m => appendMessage(m.role === 'assistant' ? 'ai' : 'user', m.content));
+        } else {
+          appendMessage('ai', "Hi! I'm here to help you explore this dream. What stood out to you most?");
+        }
+      }
+
+      if (chatOpen) setTimeout(() => document.getElementById('chat-input').focus(), 320);
+    }
+
+    function appendMessage(role, text) {
+      const msgs = document.getElementById('chat-messages');
+      const div  = document.createElement('div');
+      div.className = `chat-msg ${role}`;
+      div.textContent = text;
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function showTyping() {
+      const msgs = document.getElementById('chat-messages');
+      const div  = document.createElement('div');
+      div.className = 'chat-msg typing';
+      div.id = 'typing-indicator';
+      div.textContent = '···';
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function hideTyping() {
+      document.getElementById('typing-indicator')?.remove();
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const text  = input.value.trim();
+      if (!text) return;
+      input.value = '';
+
+      appendMessage('user', text);
+      chatHistory.push({ role: 'user', content: text });
+
+      const sendBtn = document.getElementById('chat-send');
+      sendBtn.disabled = true;
+      showTyping();
+
+      const dreamContext = currentDream
+        ? `Dream text:\n${currentDream.text}\n\nSummary: ${currentDream.summary || ''}`
+        : null;
+
+      try {
+        const { reply } = await sendChatMessage(
+          currentUser?.uid || 'anonymous',
+          text,
+          dreamContext,
+          chatHistory.slice(0, -1)
+        );
+        hideTyping();
+        appendMessage('ai', reply);
+        chatHistory.push({ role: 'assistant', content: reply });
+        if (currentUser && dreamId) {
+          saveChatHistory(currentUser.uid, dreamId, chatHistory).catch(() => {});
+        }
+      } catch {
+        hideTyping();
+        appendMessage('ai', "Sorry, I couldn't connect right now. Try again in a moment.");
+        chatHistory.pop();
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    document.getElementById('chat-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+
+    window.toggleChat  = toggleChat;
+    window.sendMessage = sendMessage;
+
+    requireAuth(async user => {
+      currentUser = user;
+      userProfile = await getUserProfile(user.uid).catch(() => null);
+
+      if (new URLSearchParams(window.location.search).get('chat') === '1') {
+        setTimeout(() => toggleChat(), 600);
+      }
+
+      if (!dreamId) {
+        document.getElementById('dream-content').innerHTML =
+          '<div style="text-align:center; padding:60px 20px; color:var(--text-dim);">No dream selected.</div>';
+        return;
+      }
+      try {
+        const dream = await getDream(user.uid, dreamId);
+        if (!dream) {
+          document.getElementById('dream-content').innerHTML =
+            '<div style="text-align:center; padding:60px 20px; color:var(--text-dim);">Dream not found.</div>';
+          return;
+        }
+        currentDream = dream;
+        render(dream);
+      } catch (err) {
+        console.error('Failed to load dream:', err);
+        document.getElementById('dream-content').innerHTML =
+          '<div style="text-align:center; padding:60px 20px; color:var(--text-dim);">Could not load dream. Please try again.</div>';
+      }
+    });
+  </script>
+</body>
+</html>

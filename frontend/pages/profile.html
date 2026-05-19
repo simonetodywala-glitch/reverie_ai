@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Reverie — Profile</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 13px; font-weight: 600; color: var(--text-dim); margin-bottom: 6px; display: block; }
+    .result-box { background: var(--surface); border-radius: 14px; padding: 18px; margin-top: 14px; }
+    .result-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .result-row:last-child { border-bottom: none; }
+    .result-label { font-size: 14px; color: var(--text-dim); }
+    .result-value { font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 800; color: var(--text); }
+    select {
+      width: 100%; background: var(--surface); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; padding: 14px 16px; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 15px; outline: none;
+      appearance: none; transition: border-color 0.2s;
+    }
+    select:focus { border-color: var(--accent-soft); }
+    .check-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+    .check-row input[type="checkbox"] { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--accent); }
+    details > summary { list-style: none; cursor: pointer; }
+    details > summary::-webkit-details-marker { display: none; }
+    .adj-row { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+    .adj-row:last-child { border-bottom: none; }
+    .adj-factor { font-weight: 600; }
+    .adj-note { color: var(--text-dim); display: block; font-size: 12px; margin-top: 2px; }
+
+    .eye-test-steps {
+      font-size: 13px; color: var(--text-dim); line-height: 1.7;
+      background: var(--surface); border-radius: 12px; padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+    .eye-test-steps strong { color: var(--text); }
+    .dom-btn-row { display: flex; gap: 8px; }
+    .dom-btn {
+      flex: 1; padding: 12px 8px; border-radius: 14px; border: 1.5px solid rgba(255,255,255,0.1);
+      background: var(--surface); color: var(--text-dim); font-size: 14px;
+      font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.2s; text-align: center;
+    }
+    .dom-btn.selected { border-color: var(--accent); background: rgba(124,58,237,0.15); color: var(--text); }
+    .cross-badge {
+      margin-top: 10px; padding: 10px 14px; border-radius: 12px;
+      background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.25);
+      font-size: 13px; color: var(--text-dim); line-height: 1.55; display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-frame">
+
+    <div class="page-header">👤 Profile</div>
+
+    <div class="main-content page-content">
+
+      <!-- MIND PROFILE -->
+      <div class="section-label">Mind Profile</div>
+      <div class="card" style="margin-bottom:16px;">
+        <div style="font-size:13px; color:var(--text-dim); margin-bottom:14px; line-height:1.55;">
+          Reverie uses this to personalise dream analysis — connecting your brain's natural processing style to your dream imagery.
+        </div>
+
+        <div class="form-label">Handedness</div>
+        <div class="dom-btn-row" style="margin-bottom:16px;">
+          <button class="dom-btn" id="hand-right" onclick="setHandedness('right')">Right</button>
+          <button class="dom-btn" id="hand-left"  onclick="setHandedness('left')">Left</button>
+          <button class="dom-btn" id="hand-ambi"  onclick="setHandedness('ambidextrous')">Both</button>
+        </div>
+
+        <div class="form-label">Dominant Eye</div>
+        <div class="eye-test-steps">
+          <strong>Quick test:</strong> Make a small triangle with both hands and hold it at arm's length.
+          Focus on any object through the triangle. Now close your <em>left</em> eye — if the object stays centered, you're <strong>right-eye dominant</strong>.
+          If it jumps away, you're <strong>left-eye dominant</strong>.
+        </div>
+        <div class="dom-btn-row">
+          <button class="dom-btn" id="eye-left"   onclick="setEyeDominance('left')">Left Eye</button>
+          <button class="dom-btn" id="eye-right"  onclick="setEyeDominance('right')">Right Eye</button>
+          <button class="dom-btn" id="eye-unsure" onclick="setEyeDominance('unsure')">Not sure</button>
+        </div>
+        <div class="cross-badge" id="cross-badge">
+          ✦ You're <strong>cross-dominant</strong> — your dominant eye and hand are on opposite sides.
+          Research links this to more flexible communication between brain hemispheres, and often more vivid or unconventional dreams.
+        </div>
+      </div>
+
+      <!-- SLEEP SCHEDULE CALCULATOR -->
+      <div class="section-label">Sleep Schedule</div>
+
+      <!-- Last saved recommendation — shown once a schedule exists in Firestore -->
+      <div id="prev-schedule-card" style="display:none; margin-bottom:12px; background:var(--surface); border-radius:14px; padding:16px; border:1px solid rgba(124,58,237,0.2);">
+        <div style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-dim); margin-bottom:10px;">Last recommendation</div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+          <div>
+            <div style="font-family:'Nunito',sans-serif; font-size:32px; font-weight:900; color:#fff; line-height:1;" id="prev-bedtime-display">—</div>
+            <div style="font-size:13px; color:var(--text-dim); margin-top:4px;" id="prev-range-display"></div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:'Nunito',sans-serif; font-size:17px; font-weight:700;" id="prev-hours-display">—</div>
+            <div style="font-size:12px; color:var(--text-dim); margin-top:2px;" id="prev-date-display"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+
+        <div class="form-group">
+          <label class="form-label">Wake-up time</label>
+          <input type="time" id="wake-input" value="07:00" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Desired sleep (hours)</label>
+          <input type="number" id="desired-sleep" placeholder="e.g. 8 — leave blank to use age" min="5" max="12" step="0.5" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Age <span style="font-weight:400;">(optional — fallback when desired hours is blank)</span></label>
+          <input type="number" id="age-input" placeholder="e.g. 22" min="10" max="100" />
+        </div>
+
+        <details style="margin-bottom:18px;">
+          <summary style="font-size:13px; color:var(--accent-soft); font-weight:700; padding:4px 0;">
+            ＋ Add more factors for a better recommendation
+          </summary>
+          <div style="margin-top:14px; display:flex; flex-direction:column; gap:14px;">
+
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Last caffeine today</label>
+              <input type="time" id="caffeine-input" />
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Exercise timing</label>
+              <select id="exercise-input">
+                <option value="none">No exercise / not relevant</option>
+                <option value="morning">Morning (before noon)</option>
+                <option value="afternoon">Afternoon</option>
+                <option value="evening">Evening (after 6 pm)</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Daily naps</label>
+              <select id="nap-input">
+                <option value="none">No naps</option>
+                <option value="short">Short nap (&lt;30 min)</option>
+                <option value="long">Long nap (30+ min)</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Current stress level</label>
+              <select id="stress-input">
+                <option value="1">1 — Very low</option>
+                <option value="2" selected>2 — Low</option>
+                <option value="3">3 — Moderate</option>
+                <option value="4">4 — High</option>
+                <option value="5">5 — Very high</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Screen-free time before bed</label>
+              <select id="screen-input">
+                <option value="0">No screen-free time</option>
+                <option value="15">15 min</option>
+                <option value="30">30 min</option>
+                <option value="60" selected>1 hour</option>
+                <option value="90">1.5 hours</option>
+                <option value="120">2 hours</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Last meal / snack tonight</label>
+              <input type="time" id="meal-time-input" />
+            </div>
+
+            <div class="check-row">
+              <input type="checkbox" id="alcohol-input" />
+              <label class="form-label" style="margin:0; cursor:pointer;" for="alcohol-input">Drink alcohol most nights</label>
+            </div>
+            <div class="check-row">
+              <input type="checkbox" id="shiftwork-input" />
+              <label class="form-label" style="margin:0; cursor:pointer;" for="shiftwork-input">Shift work or irregular schedule</label>
+            </div>
+
+          </div>
+        </details>
+
+        <button class="btn btn-primary" onclick="calculateSchedule()">Calculate My Bedtime</button>
+
+        <div id="schedule-result" style="display:none;">
+          <div class="result-box" style="margin-top:16px;">
+            <div class="result-row">
+              <span class="result-label">Recommended bedtime</span>
+              <span class="result-value" id="bedtime-result">—</span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Window</span>
+              <span class="result-value" id="bedtime-range" style="font-size:14px;">—</span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Target sleep</span>
+              <span class="result-value" id="hours-result">—</span>
+            </div>
+          </div>
+
+          <div id="adjustments-box" style="display:none; margin-top:12px; background:var(--surface); border-radius:14px; padding:16px;">
+            <div class="ai-label" style="margin-bottom:10px;">🔎 Factors considered</div>
+            <div id="adjustments-list"></div>
+          </div>
+
+          <div class="ai-response" style="margin-top:12px;">
+            <div class="ai-label">💡 Tip</div>
+            <div class="ai-text" id="gemini-tip" style="font-size:14px;"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- USER INFO -->
+      <div class="section-label" style="margin-top:8px;">Account</div>
+      <div class="card">
+        <div class="result-row">
+          <span class="result-label">Name</span>
+          <span class="result-value" id="profile-name">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Email</span>
+          <span class="result-value" id="profile-email" style="font-size:14px; word-break:break-all;">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Dreams logged</span>
+          <span class="result-value" id="profile-dreams">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Current streak</span>
+          <span class="result-value" id="profile-streak">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Plan</span>
+          <span class="result-value" style="color:var(--gold);">Free</span>
+        </div>
+      </div>
+
+      <!-- PREFERENCES -->
+      <div class="section-label" style="margin-top:8px;">Preferences</div>
+      <div class="card">
+        <div class="result-row">
+          <span class="result-label">Sleep type</span>
+          <span class="result-value" id="profile-chronotype">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Goal</span>
+          <span class="result-value" id="profile-goal">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Wake time</span>
+          <span class="result-value" id="profile-waketime">—</span>
+        </div>
+      </div>
+
+      <button class="btn" id="signout-btn" style="margin-top:8px; width:100%; background:rgba(255,255,255,0.06); color:var(--text-dim); box-shadow:none;">Sign Out</button>
+
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <div class="nav-group">
+        <a class="nav-link" href="../index.html">Home</a>
+        <a class="nav-link" href="dreams.html">Dreams</a>
+      </div>
+      <a class="nav-plus" href="journal.html">+</a>
+      <div class="nav-group">
+        <a class="nav-link" href="lucid.html">Lucid</a>
+        <a class="nav-link" href="winddown.html">Wind Down</a>
+      </div>
+    </nav>
+
+  </div>
+
+  <script src="../js/app.js"></script>
+  <script src="../js/api.js"></script>
+  <script type="module">
+    import { requireAuth, logOut } from '../js/auth.js';
+    import { getUserProfile, getDreams, saveUserProfile, saveSleepSchedule, getLatestSleepSchedule } from '../js/firebase.js';
+    import { calculateBedtime, formatTime12h } from '../js/sleepEngine.js';
+
+    const chronotypeLabel = { early: 'Early bird', middle: 'In between', night: 'Night owl' };
+    const goalLabel = {
+      dreams:   'Understand my dreams',
+      sleep:    'Sleep better',
+      patterns: 'Find emotional patterns',
+      all:      'All of the above'
+    };
+
+    let currentUser        = null;
+    let currentUserProfile = null;
+    let pendingHandedness  = null;
+    let pendingEyeDom      = null;
+
+    function setHandedness(val) {
+      pendingHandedness = val;
+      ['right','left','ambi'].forEach(k =>
+        document.getElementById(`hand-${k}`).classList.toggle('selected', k === val || (val === 'ambidextrous' && k === 'ambi'))
+      );
+      checkCrossDominance();
+      saveMindProfile();
+    }
+
+    function setEyeDominance(val) {
+      pendingEyeDom = val;
+      ['left','right','unsure'].forEach(k =>
+        document.getElementById(`eye-${k}`).classList.toggle('selected', k === val)
+      );
+      checkCrossDominance();
+      saveMindProfile();
+    }
+
+    function checkCrossDominance() {
+      const badge = document.getElementById('cross-badge');
+      const cross = pendingHandedness && pendingEyeDom && pendingEyeDom !== 'unsure' &&
+        ((pendingHandedness === 'right' && pendingEyeDom === 'left') ||
+         (pendingHandedness === 'left'  && pendingEyeDom === 'right'));
+      badge.style.display = cross ? 'block' : 'none';
+    }
+
+    async function saveMindProfile() {
+      if (!currentUser) return;
+      await saveUserProfile(currentUser.uid, {
+        handedness:   pendingHandedness,
+        eyeDominance: pendingEyeDom,
+      });
+    }
+
+    function restoreMindProfile(profile) {
+      if (profile?.handedness)   setHandedness(profile.handedness);
+      if (profile?.eyeDominance) setEyeDominance(profile.eyeDominance);
+    }
+
+    window.setHandedness   = setHandedness;
+    window.setEyeDominance = setEyeDominance;
+
+    function computeStreak(dreams) {
+      if (!dreams.length) return 0;
+      const days = new Set(dreams.map(d => {
+        const ts = d.createdAt;
+        const date = ts?.toDate ? ts.toDate() : new Date(ts);
+        return date.toDateString();
+      }));
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const start = days.has(today.toDateString())     ? new Date(today)
+                  : days.has(yesterday.toDateString()) ? new Date(yesterday)
+                  : null;
+      if (!start) return 0;
+      let streak = 0;
+      const check = new Date(start);
+      while (days.has(check.toDateString())) {
+        streak++;
+        check.setDate(check.getDate() - 1);
+      }
+      return streak;
+    }
+
+    // Pre-fill a form element only when there is a real saved value
+    function fill(id, value) {
+      const el = document.getElementById(id);
+      if (el && value !== null && value !== undefined) el.value = value;
+    }
+
+    function showPrevSchedule(schedule) {
+      const ts = schedule.createdAt?.toDate ? schedule.createdAt.toDate() : new Date();
+      document.getElementById('prev-bedtime-display').textContent = formatTime12h(schedule.bedtime);
+      document.getElementById('prev-range-display').textContent   =
+        `${formatTime12h(schedule.bedtimeRange?.early)} – ${formatTime12h(schedule.bedtimeRange?.late)}`;
+      document.getElementById('prev-hours-display').textContent   = `${schedule.targetSleepHours} h sleep`;
+      document.getElementById('prev-date-display').textContent    =
+        ts.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      document.getElementById('prev-schedule-card').style.display = 'block';
+    }
+
+    requireAuth(async user => {
+      currentUser = user;
+      const [profile, dreams, latestSchedule] = await Promise.all([
+        getUserProfile(user.uid),
+        getDreams(user.uid),
+        getLatestSleepSchedule(user.uid)
+      ]);
+      currentUserProfile = profile;
+
+      // ── Account section ──
+      document.getElementById('profile-name').textContent       = user.displayName || profile?.name || '—';
+      document.getElementById('profile-email').textContent      = user.email || '—';
+      document.getElementById('profile-dreams').textContent     = dreams.length;
+      const streak = computeStreak(dreams);
+      document.getElementById('profile-streak').textContent     = streak > 0 ? `🔥 ${streak} night${streak !== 1 ? 's' : ''}` : '—';
+      document.getElementById('profile-chronotype').textContent = chronotypeLabel[profile?.chronotype] || '—';
+      document.getElementById('profile-goal').textContent       = goalLabel[profile?.goal] || '—';
+      document.getElementById('profile-waketime').textContent   = profile?.wakeTime || '—';
+
+      // ── Pre-fill sleep calculator from saved profile ──
+      fill('wake-input',      profile?.wakeTime);
+      fill('desired-sleep',   profile?.desiredSleepHours);
+      fill('caffeine-input',  profile?.caffeineLastCup);
+      fill('meal-time-input', profile?.lastMealTime);
+      fill('exercise-input',  profile?.exerciseTiming);
+      fill('stress-input',    profile?.stressLevel);
+      fill('screen-input',    profile?.screenCutoffMins);
+      if (profile?.alcoholNightly) document.getElementById('alcohol-input').checked  = true;
+      if (profile?.shiftWork)      document.getElementById('shiftwork-input').checked = true;
+      if (profile?.napsDaily) {
+        document.getElementById('nap-input').value = Number(profile.napDuration) > 30 ? 'long' : 'short';
+      }
+
+      // ── Show last saved schedule if one exists ──
+      if (latestSchedule) showPrevSchedule(latestSchedule);
+
+      // ── Restore Mind Profile ──
+      restoreMindProfile(profile);
+    });
+
+    document.getElementById('signout-btn').addEventListener('click', () => logOut());
+
+    // ── Static tips (shown when backend is unavailable) ──
+    const staticTips = [
+      'Try dimming your lights 30 minutes before your target bedtime — it signals your brain that sleep is coming.',
+      'Avoid screens in the last hour before bed. Even a few minutes of blue light can delay melatonin.',
+      'A consistent bedtime, even on weekends, is the single most effective thing you can do for sleep quality.',
+      'Cool your room to 65–68 °F (18–20 °C). Core body temperature needs to drop 1–2 degrees to initiate sleep.',
+    ];
+
+    window.calculateSchedule = async function () {
+      const wakeTime = document.getElementById('wake-input').value;
+      if (!wakeTime) { alert('Please set your wake-up time.'); return; }
+
+      const napVal = document.getElementById('nap-input').value;
+
+      const profile = {
+        wakeTime,
+        age:               parseInt(document.getElementById('age-input').value)        || null,
+        desiredSleepHours: parseFloat(document.getElementById('desired-sleep').value)  || null,
+        caffeineLastCup:   document.getElementById('caffeine-input').value             || null,
+        lastMealTime:      document.getElementById('meal-time-input').value            || null,
+        exerciseTiming:    document.getElementById('exercise-input').value,
+        napsDaily:         napVal !== 'none',
+        napDuration:       napVal === 'long' ? 45 : 20,
+        stressLevel:       parseInt(document.getElementById('stress-input').value),
+        screenCutoffMins:  parseInt(document.getElementById('screen-input').value),
+        alcoholNightly:    document.getElementById('alcohol-input').checked,
+        shiftWork:         document.getElementById('shiftwork-input').checked,
+        chronotype:        currentUserProfile?.chronotype ?? null,
+      };
+
+      const result = calculateBedtime(profile);
+
+      // ── Render result ──
+      document.getElementById('bedtime-result').textContent = formatTime12h(result.bedtime);
+      document.getElementById('bedtime-range').textContent  =
+        `${formatTime12h(result.bedtimeRange.early)} – ${formatTime12h(result.bedtimeRange.late)}`;
+      document.getElementById('hours-result').textContent   = `${result.targetSleepHours} h`;
+
+      if (result.adjustments.length > 0) {
+        document.getElementById('adjustments-list').innerHTML = result.adjustments.map(a => {
+          const color = a.delta > 0 ? '#c084fc' : a.delta < 0 ? '#4ade80' : 'var(--text-dim)';
+          const arrow = a.delta > 0 ? '↑ later' : a.delta < 0 ? '↓ earlier' : '→';
+          return `<div class="adj-row">
+            <span class="adj-factor" style="color:${color};">${a.factor} <span style="font-weight:400;font-size:12px;">${arrow}</span></span>
+            <span class="adj-note">${a.note}</span>
+          </div>`;
+        }).join('');
+        document.getElementById('adjustments-box').style.display = 'block';
+      } else {
+        document.getElementById('adjustments-box').style.display = 'none';
+      }
+
+      document.getElementById('schedule-result').style.display = 'block';
+
+      // ── Save inputs to user profile + save schedule result to Firestore ──
+      if (currentUser) {
+        saveUserProfile(currentUser.uid, {
+          wakeTime:          profile.wakeTime,
+          desiredSleepHours: profile.desiredSleepHours,
+          caffeineLastCup:   profile.caffeineLastCup,
+          lastMealTime:      profile.lastMealTime,
+          exerciseTiming:    profile.exerciseTiming,
+          napsDaily:         profile.napsDaily,
+          napDuration:       profile.napDuration,
+          stressLevel:       profile.stressLevel,
+          screenCutoffMins:  profile.screenCutoffMins,
+          alcoholNightly:    profile.alcoholNightly,
+          shiftWork:         profile.shiftWork,
+        }).catch(err => console.error('Profile save error:', err));
+
+        saveSleepSchedule(currentUser.uid, {
+          bedtime:          result.bedtime,
+          bedtimeRange:     result.bedtimeRange,
+          targetSleepHours: result.targetSleepHours,
+          adjustments:      result.adjustments,
+          wakeTime:         profile.wakeTime,
+        }).then(() => {
+          showPrevSchedule({ ...result, createdAt: { toDate: () => new Date() } });
+        }).catch(err => console.error('Schedule save error:', err));
+      }
+
+      // ── Tip (Gemini if backend running, static fallback) ──
+      try {
+        const r = await window.getSleepTip(profile, result);
+        document.getElementById('gemini-tip').textContent = r.tip;
+      } catch {
+        document.getElementById('gemini-tip').textContent =
+          staticTips[Math.floor(Math.random() * staticTips.length)];
+      }
+    };
+  </script>
+</body>
+</html>

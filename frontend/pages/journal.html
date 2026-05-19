@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Reverie — Log a Dream</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .char-count { font-size: 12px; color: var(--text-muted); text-align: right; margin-top: 6px; }
+    .analysis-section { margin-top: 20px; }
+    .emotion-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+    .theme-list { font-size: 15px; color: var(--text-dim); line-height: 1.7; }
+    .reflection-list { list-style: none; padding: 0; margin: 8px 0 0; }
+    .reflection-list li { font-size: 14px; color: var(--text-dim); line-height: 1.6; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .reflection-list li:last-child { border-bottom: none; }
+    .reflection-list li::before { content: "✦ "; opacity: 0.5; }
+    .context-input { font-size: 14px; }
+    .connection-box {
+      background: rgba(124,58,237,0.08);
+      border: 1px solid rgba(124,58,237,0.2);
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 14px;
+      color: var(--text-dim);
+      line-height: 1.65;
+    }
+    .mind-note-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      font-style: italic;
+    }
+
+    .input-mode-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1.5px solid rgba(255,255,255,0.1);
+      background: var(--surface);
+      color: var(--text-dim);
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mode-btn.active {
+      border-color: var(--accent);
+      color: var(--text);
+      background: rgba(124,58,237,0.15);
+    }
+
+    .mic-area {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 32px 0 24px;
+    }
+    .mic-area.visible { display: flex; }
+
+    .mic-btn {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: none;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 32px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mic-btn:hover { background: var(--accent); }
+    .mic-btn.recording {
+      background: #c0392b;
+      animation: mic-pulse 1.2s ease-in-out infinite;
+    }
+    .mic-btn.transcribing {
+      background: var(--surface-2);
+      opacity: 0.6;
+      cursor: default;
+    }
+    @keyframes mic-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(192,57,43,0.5); }
+      50%       { box-shadow: 0 0 0 16px rgba(192,57,43,0); }
+    }
+
+    .mic-status {
+      font-size: 14px;
+      color: var(--text-dim);
+      text-align: center;
+      min-height: 20px;
+    }
+    .mic-status.recording { color: #e74c3c; }
+  </style>
+</head>
+<body>
+  <div class="app-frame">
+
+    <div class="page-header">
+      <a href="../index.html" style="color:var(--text-dim); text-decoration:none; font-size:14px;">← Back</a>
+      <div style="margin-top:6px;">🌙 Log a Dream</div>
+    </div>
+
+    <div class="main-content page-content">
+
+      <div id="nightmare-banner" style="display:none; background:linear-gradient(135deg,rgba(239,100,100,0.12),rgba(124,58,237,0.08)); border:1px solid rgba(239,100,100,0.25); border-radius:16px; padding:12px 16px; margin-bottom:14px; font-size:13px; color:rgba(255,255,255,0.75); line-height:1.6;">
+        😰 <strong style="color:#fff;">Logging last night's nightmare.</strong> Describe what you remember — the AI will analyze it and offer to rewrite it with a calmer ending.
+      </div>
+
+      <div class="section-label">What did you dream about?</div>
+
+      <div class="input-mode-row">
+        <button class="mode-btn active" id="mode-type" onclick="switchMode('type')">✍️ Write</button>
+        <button class="mode-btn" id="mode-speak" onclick="switchMode('speak')">🎙️ Speak</button>
+      </div>
+
+      <!-- TYPE MODE -->
+      <div id="type-area">
+        <textarea
+          id="dream-input"
+          rows="7"
+          placeholder="Describe your dream... write freely, the more detail the better. The AI will extract the emotions and themes for you."
+          maxlength="2000"
+        ></textarea>
+        <div class="char-count"><span id="char-count">0</span> / 2000</div>
+      </div>
+
+      <!-- SPEAK MODE -->
+      <div class="mic-area" id="speak-area">
+        <button class="mic-btn" id="mic-btn" onclick="toggleRecording()">🎤</button>
+        <div class="mic-status" id="mic-status">Tap to record your dream</div>
+      </div>
+
+      <div class="section-label" style="margin-top: 18px;">What's on your mind today? <span style="font-weight:400; opacity:0.5;">(optional)</span></div>
+      <textarea
+        id="waking-context"
+        class="context-input"
+        rows="2"
+        placeholder="Any stress, big events, emotions, or things weighing on you… Reverie will look for connections."
+        maxlength="400"
+      ></textarea>
+
+      <button class="btn btn-primary" id="analyze-btn" style="margin-top: 16px;" onclick="handleAnalyze()">
+        ✨ Analyze Dream
+      </button>
+
+      <!-- AI RESULT (shown after analysis) -->
+      <div id="analysis-result" style="display:none;">
+
+        <div class="ai-response analysis-section">
+          <div class="ai-label">🤖 Gemini Analysis</div>
+
+          <div class="section-label" style="margin-top:12px;">Emotions detected</div>
+          <div class="emotion-row" id="emotions-row"></div>
+
+          <div class="section-label" style="margin-top:12px;">Themes & symbols</div>
+          <div class="theme-list" id="themes-list"></div>
+
+          <div class="section-label" style="margin-top:12px;">Summary</div>
+          <div class="ai-text" id="summary-text"></div>
+
+          <div class="section-label" style="margin-top:16px;">Deeper interpretation</div>
+          <div class="ai-text" id="interpretation-text" style="font-size:14px; line-height:1.7;"></div>
+
+          <div id="waking-connections-section" style="display:none;">
+            <div class="section-label" style="margin-top:16px;">Waking life connection</div>
+            <div class="connection-box" id="waking-connections-text"></div>
+          </div>
+
+          <div id="mind-note-section" style="display:none;">
+            <div class="section-label" style="margin-top:16px;">Your mind's processing style</div>
+            <div class="mind-note-box" id="mind-note-text"></div>
+          </div>
+
+          <div class="section-label" style="margin-top:16px;">Reflect on this</div>
+          <ul class="reflection-list" id="reflections-list"></ul>
+
+        </div>
+
+        <button class="btn btn-primary" style="margin-top:16px;" onclick="saveDream()">
+          💾 Save to Dream Library
+        </button>
+        <button class="btn btn-ghost" style="margin-top:10px;" onclick="resetForm()">
+          ↩ Try Again
+        </button>
+
+      </div>
+
+      <!-- LOADING STATE -->
+      <div id="loading-state" style="display:none;">
+        <div class="spinner"></div>
+        <p style="text-align:center; color:var(--text-muted); font-size:14px;">Gemini is reading your dream...</p>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <div class="nav-group">
+        <a class="nav-link" href="../index.html">Home</a>
+        <a class="nav-link" href="dreams.html">Dreams</a>
+      </div>
+      <a class="nav-plus" href="journal.html" style="background:var(--accent-soft);">+</a>
+      <div class="nav-group">
+        <a class="nav-link" href="lucid.html">Lucid</a>
+        <a class="nav-link" href="winddown.html">Wind Down</a>
+      </div>
+    </nav>
+
+  </div>
+
+  <script src="../js/app.js"></script>
+  <script src="../js/api.js"></script>
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    import { saveDream as saveToFirestore, getUserProfile } from '../js/firebase.js';
+
+    let currentUser = null;
+    let lastAnalysis = null;
+    let userProfile  = null;
+
+    if (new URLSearchParams(window.location.search).get('nightmare') === '1') {
+      document.getElementById('nightmare-banner').style.display = 'block';
+    }
+
+    requireAuth(async user => {
+      currentUser = user;
+      userProfile = await getUserProfile(user.uid).catch(() => null);
+    });
+
+    const input   = document.getElementById('dream-input');
+    const counter = document.getElementById('char-count');
+    input.addEventListener('input', () => { counter.textContent = input.value.length; });
+
+    // ── VOICE RECORDING ──
+    let mediaRecorder = null;
+    let audioChunks   = [];
+    let isRecording   = false;
+
+    function switchMode(mode) {
+      const typeArea  = document.getElementById('type-area');
+      const speakArea = document.getElementById('speak-area');
+      document.getElementById('mode-type').classList.toggle('active', mode === 'type');
+      document.getElementById('mode-speak').classList.toggle('active', mode === 'speak');
+      typeArea.style.display  = mode === 'type'  ? 'block' : 'none';
+      speakArea.classList.toggle('visible', mode === 'speak');
+      if (mode === 'type' && isRecording) stopRecording();
+    }
+
+    async function toggleRecording() {
+      if (isRecording) { stopRecording(); return; }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks  = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+        mediaRecorder.onstop = handleRecordingStop;
+        mediaRecorder.start();
+        isRecording = true;
+        document.getElementById('mic-btn').classList.add('recording');
+        document.getElementById('mic-btn').textContent = '⏹️';
+        const statusEl = document.getElementById('mic-status');
+        statusEl.textContent = 'Recording... tap to stop';
+        statusEl.classList.add('recording');
+      } catch {
+        alert('Microphone access denied. Please allow microphone permissions and try again.');
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+      mediaRecorder?.stream?.getTracks().forEach(t => t.stop());
+      isRecording = false;
+    }
+
+    async function handleRecordingStop() {
+      const micBtn   = document.getElementById('mic-btn');
+      const statusEl = document.getElementById('mic-status');
+      micBtn.classList.remove('recording');
+      micBtn.classList.add('transcribing');
+      micBtn.textContent = '⏳';
+      statusEl.textContent = 'Transcribing...';
+      statusEl.classList.remove('recording');
+
+      try {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        const { text } = await transcribeAudio(blob);
+        input.value = text;
+        counter.textContent = text.length;
+        switchMode('type');
+        statusEl.textContent = 'Tap to record your dream';
+      } catch (err) {
+        statusEl.textContent = 'Transcription failed. Try again.';
+        console.error(err);
+      } finally {
+        micBtn.classList.remove('transcribing');
+        micBtn.textContent = '🎤';
+      }
+    }
+
+    window.switchMode      = switchMode;
+    window.toggleRecording = toggleRecording;
+
+    const emotionTags = {
+      wonder: 'tag-wonder', anxiety: 'tag-anxiety', joy: 'tag-joy',
+      fear: 'tag-fear', peaceful: 'tag-peaceful', sadness: 'tag-sadness',
+      excitement: 'tag-excitement', nostalgia: 'tag-nostalgia', confusion: 'tag-confusion',
+      hope: 'tag-hope', longing: 'tag-longing', dread: 'tag-dread',
+      awe: 'tag-awe', grief: 'tag-grief', frustration: 'tag-frustration',
+      tenderness: 'tag-tenderness', shame: 'tag-shame', pride: 'tag-pride',
+      restlessness: 'tag-restlessness', relief: 'tag-relief',
+    };
+
+    async function handleAnalyze() {
+      const text = input.value.trim();
+      if (text.length < 10) { alert('Please write a bit more about your dream first!'); return; }
+
+      document.getElementById('loading-state').style.display   = 'block';
+      document.getElementById('analyze-btn').style.display     = 'none';
+      document.getElementById('analysis-result').style.display = 'none';
+
+      try {
+        lastAnalysis = await analyzeDream(text, {
+          wakingContext: document.getElementById('waking-context').value.trim() || null,
+          eyeDominance:  userProfile?.eyeDominance  || null,
+          handedness:    userProfile?.handedness    || null,
+        });
+      } catch (err) {
+        console.error('Dream analysis error:', err);
+        document.getElementById('loading-state').style.display = 'none';
+        document.getElementById('analyze-btn').style.display   = 'block';
+        alert('Could not analyze your dream. Please check your connection and try again.');
+        return;
+      } finally {
+        document.getElementById('loading-state').style.display = 'none';
+      }
+
+      renderAnalysis(lastAnalysis);
+    }
+
+    function renderAnalysis(data) {
+      document.getElementById('emotions-row').innerHTML = data.emotions.map(e => {
+        const cls = emotionTags[e.toLowerCase()] || '';
+        return `<span class="tag ${cls}">${e}</span>`;
+      }).join('');
+      document.getElementById('themes-list').innerHTML  = data.themes.map(t => `• ${t}`).join('<br>');
+      document.getElementById('summary-text').textContent = data.summary;
+
+      const interpEl = document.getElementById('interpretation-text');
+      if (data.interpretation) {
+        interpEl.textContent = data.interpretation;
+        interpEl.parentElement.style.display = '';
+      } else {
+        interpEl.parentElement.style.display = 'none';
+      }
+
+      const reflEl = document.getElementById('reflections-list');
+      if (data.reflections?.length) {
+        reflEl.innerHTML = data.reflections.map(r => `<li>${r}</li>`).join('');
+        reflEl.parentElement.style.display = '';
+      } else {
+        reflEl.parentElement.style.display = 'none';
+      }
+
+      const wcSection = document.getElementById('waking-connections-section');
+      if (data.waking_connections) {
+        document.getElementById('waking-connections-text').textContent = data.waking_connections;
+        wcSection.style.display = '';
+      } else {
+        wcSection.style.display = 'none';
+      }
+
+      const mnSection = document.getElementById('mind-note-section');
+      if (data.mind_note) {
+        document.getElementById('mind-note-text').textContent = data.mind_note;
+        mnSection.style.display = '';
+      } else {
+        mnSection.style.display = 'none';
+      }
+
+      document.getElementById('analysis-result').style.display = 'block';
+    }
+
+    async function saveDream() {
+      if (!currentUser || !lastAnalysis) return;
+      const btn = document.querySelector('#analysis-result .btn-primary');
+      btn.textContent = 'Saving...';
+      btn.disabled = true;
+      try {
+        await saveToFirestore(currentUser.uid, {
+          text:           input.value.trim(),
+          emotions:       lastAnalysis.emotions,
+          themes:         lastAnalysis.themes,
+          summary:        lastAnalysis.summary,
+          interpretation: lastAnalysis.interpretation || null,
+          reflections:    lastAnalysis.reflections    || [],
+          isNightmare:    lastAnalysis.is_nightmare   ?? false,
+        });
+        window.location.href = 'dreams.html';
+      } catch (err) {
+        console.error('Save error:', err);
+        alert('Could not save dream. Please try again.');
+        btn.textContent = '💾 Save to Dream Library';
+        btn.disabled = false;
+      }
+    }
+
+    function resetForm() {
+      input.value = '';
+      counter.textContent = '0';
+      lastAnalysis = null;
+      document.getElementById('analysis-result').style.display = 'none';
+      document.getElementById('analyze-btn').style.display = 'block';
+    }
+
+    window.handleAnalyze = handleAnalyze;
+    window.saveDream     = saveDream;
+    window.resetForm     = resetForm;
+  </script>
+</body>
+</html>

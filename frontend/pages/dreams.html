@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Reverie — Dreams</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .filter-wrapper { position: relative; display: flex; align-items: center; padding: 0 0 16px; }
+    .filter-arrow {
+      flex-shrink: 0;
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-dim);
+      transition: background 0.2s, color 0.2s;
+      z-index: 1;
+      user-select: none;
+    }
+    .filter-arrow:hover { background: var(--accent-soft); color: #fff; }
+    .filter-arrow.hidden { opacity: 0; pointer-events: none; }
+    .filter-arrow-left  { margin-left: 12px; margin-right: 4px; }
+    .filter-arrow-right { margin-right: 12px; margin-left: 4px; }
+    .filter-row {
+      display: flex; gap: 8px;
+      overflow-x: auto; scroll-behavior: smooth;
+      scrollbar-width: none; flex: 1;
+    }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .filter-chip {
+      flex-shrink: 0;
+      padding: 6px 14px;
+      border-radius: 100px;
+      background: var(--surface);
+      color: var(--text-dim);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: background 0.2s, color 0.2s;
+    }
+    .filter-chip.active { background: var(--accent); color: #fff; }
+    .dream-count { font-size: 13px; color: var(--text-muted); padding: 0 20px 10px; }
+    .dream-card { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+    .dream-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .dream-card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+    .nightmare-tag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(239,100,100,0.9); background: rgba(239,100,100,0.12); border: 1px solid rgba(239,100,100,0.2); border-radius: 20px; padding: 2px 8px; margin-left: 6px; vertical-align: middle; }
+    .dream-view-btn {
+      font-size: 12px; font-weight: 700; color: var(--accent-soft);
+      text-decoration: none; letter-spacing: 0.03em;
+      padding: 4px 10px; border-radius: 100px;
+      border: 1px solid rgba(155,93,229,0.3);
+      transition: background 0.2s, color 0.2s;
+    }
+    .dream-view-btn:hover { background: var(--accent-soft); color: #fff; }
+    .search-wrap {
+      position: relative;
+      margin: 0 20px 4px;
+    }
+    .search-wrap input {
+      width: 100%;
+      box-sizing: border-box;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 10px 14px 10px 38px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .search-wrap input::placeholder { color: var(--text-muted); }
+    .search-wrap input:focus { outline: none; border-color: var(--accent-soft); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .search-icon {
+      position: absolute; left: 12px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px; pointer-events: none;
+      color: var(--text-muted);
+    }
+
+    .pattern-card {
+      margin: 0 0 16px;
+      background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(155,93,229,0.06));
+      border: 1px solid rgba(155,93,229,0.25);
+      border-radius: 18px; padding: 18px 18px 16px;
+    }
+    .pattern-card-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;
+    }
+    .pattern-card-title {
+      font-family: 'Nunito', sans-serif; font-weight: 800;
+      font-size: 15px; color: var(--text);
+    }
+    .pattern-pill {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--accent-soft); background: rgba(155,93,229,0.15);
+      padding: 3px 9px; border-radius: 100px;
+    }
+    .pattern-narrative {
+      font-size: 14px; color: var(--text-dim); line-height: 1.65; margin: 10px 0 12px;
+    }
+    .pattern-insight {
+      font-size: 13px; color: var(--text-muted); font-style: italic; line-height: 1.6;
+      border-left: 2px solid rgba(155,93,229,0.4); padding-left: 12px; margin-bottom: 12px;
+    }
+    .pattern-section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 6px;
+    }
+    .pattern-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .pattern-chip-item {
+      font-size: 12.5px; padding: 4px 11px; border-radius: 100px;
+      background: rgba(255,255,255,0.06); color: var(--text-dim);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .pattern-reflections { list-style: none; padding: 0; margin: 0; }
+    .pattern-reflections li {
+      font-size: 13px; color: var(--text-dim); line-height: 1.6;
+      padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .pattern-reflections li:last-child { border-bottom: none; }
+    .pattern-reflections li::before { content: "✦ "; opacity: 0.4; }
+
+    /* ── PATTERN CHAT ── */
+    .chat-fab {
+      position: fixed; bottom: 88px; right: 20px;
+      width: 52px; height: 52px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      border: none; color: #fff; font-size: 22px;
+      cursor: pointer; z-index: 200;
+      box-shadow: 0 4px 20px rgba(124,58,237,0.55);
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+    }
+    .chat-fab.visible        { opacity: 1; pointer-events: all; }
+    .chat-fab:active         { transform: scale(0.9); }
+    .chat-fab.open           { transform: scale(0.85); box-shadow: 0 2px 12px rgba(124,58,237,0.35); }
+    .chat-panel {
+      position: fixed; bottom: 88px; right: 12px;
+      width: min(340px, calc(100vw - 24px)); height: 460px;
+      background: var(--bg-2); border: 1px solid rgba(155,93,229,0.25);
+      border-radius: 24px; box-shadow: 0 12px 48px rgba(0,0,0,0.55);
+      display: flex; flex-direction: column;
+      z-index: 199; overflow: hidden;
+      transform: scale(0.88) translateY(16px); transform-origin: bottom right;
+      opacity: 0; pointer-events: none;
+      transition: transform 0.3s cubic-bezier(0.34,1.3,0.64,1), opacity 0.22s ease;
+    }
+    .chat-panel.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: all; }
+    .chat-panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 15px 18px 13px; border-bottom: 1px solid rgba(255,255,255,0.07);
+      flex-shrink: 0; background: rgba(255,255,255,0.02);
+    }
+    .chat-panel-title { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 15px; color: var(--text); }
+    .chat-panel-sub   { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .chat-close {
+      background: none; border: none; color: var(--text-muted);
+      font-size: 15px; cursor: pointer; padding: 4px 8px;
+      border-radius: 8px; transition: background 0.15s;
+    }
+    .chat-close:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+    .chat-messages {
+      flex: 1; overflow-y: auto; padding: 14px 14px 8px;
+      display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth;
+    }
+    .chat-messages::-webkit-scrollbar { width: 3px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: rgba(155,93,229,0.3); border-radius: 4px; }
+    .chat-msg {
+      max-width: 86%; padding: 10px 13px;
+      font-size: 13.5px; line-height: 1.55; border-radius: 16px;
+    }
+    .chat-msg.ai     { background: var(--surface); color: var(--text-dim); align-self: flex-start; border-bottom-left-radius: 4px; }
+    .chat-msg.user   { background: var(--accent);  color: #fff;            align-self: flex-end;   border-bottom-right-radius: 4px; }
+    .chat-msg.typing { background: var(--surface); color: var(--text-muted); align-self: flex-start; border-bottom-left-radius: 4px; letter-spacing: 3px; }
+    .chat-input-row {
+      display: flex; gap: 8px; padding: 10px 12px 12px;
+      border-top: 1px solid rgba(255,255,255,0.07); flex-shrink: 0;
+    }
+    #chat-input {
+      flex: 1; background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 14px;
+      padding: 9px 13px; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 13.5px; outline: none;
+      resize: none; transition: border-color 0.2s;
+    }
+    #chat-input:focus { border-color: rgba(155,93,229,0.5); }
+    .chat-send {
+      width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+      background: var(--accent); border: none; color: #fff; font-size: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .chat-send:hover  { background: var(--accent-soft); }
+    .chat-send:active { transform: scale(0.9); }
+    .chat-send:disabled { opacity: 0.35; cursor: default; }
+  </style>
+</head>
+<body>
+  <div class="app-frame">
+
+    <div class="page-header">📚 Dream Library</div>
+
+    <!-- FILTER CHIPS -->
+    <div class="filter-wrapper">
+      <button class="filter-arrow filter-arrow-left hidden" id="filter-prev" aria-label="Scroll left">&#8249;</button>
+      <div class="filter-row" id="filter-row">
+        <div class="filter-chip active">All</div>
+        <div class="filter-chip">Anxiety</div>
+        <div class="filter-chip">Wonder</div>
+        <div class="filter-chip">Joy</div>
+        <div class="filter-chip">Peaceful</div>
+        <div class="filter-chip">Fear</div>
+      </div>
+      <button class="filter-arrow filter-arrow-right" id="filter-next" aria-label="Scroll right">&#8250;</button>
+    </div>
+
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="dream-search" placeholder="Search dreams, themes, emotions…" autocomplete="off" />
+    </div>
+
+    <div class="main-content page-content">
+      <div id="pattern-banner"></div>
+
+      <div class="dream-count" id="dream-count"></div>
+
+      <div id="dream-list">
+        <div style="text-align:center; padding:40px 0; color:var(--text-dim); font-size:14px;">Loading dreams...</div>
+      </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <div class="nav-group">
+        <a class="nav-link" href="../index.html">Home</a>
+        <a class="nav-link active" href="dreams.html">Dreams</a>
+      </div>
+      <a class="nav-plus" href="journal.html">+</a>
+      <div class="nav-group">
+        <a class="nav-link" href="lucid.html">Lucid</a>
+        <a class="nav-link" href="winddown.html">Wind Down</a>
+      </div>
+    </nav>
+
+  </div>
+
+  <!-- PATTERN CHAT FAB -->
+  <button class="chat-fab" id="chat-fab" onclick="toggleChat()" title="Chat about your patterns">💬</button>
+
+  <!-- PATTERN CHAT PANEL -->
+  <div class="chat-panel" id="chat-panel">
+    <div class="chat-panel-header">
+      <div>
+        <div class="chat-panel-title">Chat with Reverie</div>
+        <div class="chat-panel-sub">Explore your dream patterns</div>
+      </div>
+      <button class="chat-close" onclick="toggleChat()">✕</button>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-row">
+      <textarea id="chat-input" placeholder="Ask about your patterns…" rows="1"></textarea>
+      <button class="chat-send" id="chat-send" onclick="sendMessage()">↑</button>
+    </div>
+  </div>
+
+  <script src="../js/app.js"></script>
+  <script src="../js/api.js"></script>
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    import { getDreams } from '../js/firebase.js';
+
+    const emotionTags = {
+      wonder: 'tag-wonder', anxiety: 'tag-anxiety', joy: 'tag-joy',
+      fear: 'tag-fear', peaceful: 'tag-peaceful', sadness: 'tag-sadness',
+      excitement: 'tag-excitement', nostalgia: 'tag-nostalgia', confusion: 'tag-confusion',
+      hope: 'tag-hope', longing: 'tag-longing', dread: 'tag-dread',
+      awe: 'tag-awe', grief: 'tag-grief', frustration: 'tag-frustration',
+      tenderness: 'tag-tenderness', shame: 'tag-shame', pride: 'tag-pride',
+      restlessness: 'tag-restlessness', relief: 'tag-relief',
+    };
+
+    function formatDate(ts) {
+      const date = ts?.toDate ? ts.toDate() : new Date(ts);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    let allDreams     = [];
+    let activeFilter  = null;
+    let searchQuery   = '';
+
+    function getFiltered() {
+      let result = allDreams;
+      if (activeFilter) {
+        result = result.filter(d => d.emotions?.map(e => e.toLowerCase()).includes(activeFilter));
+      }
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        result = result.filter(d =>
+          (d.text    || '').toLowerCase().includes(q) ||
+          (d.summary || '').toLowerCase().includes(q) ||
+          (d.emotions || []).some(e => e.toLowerCase().includes(q)) ||
+          (d.themes   || []).some(t => t.toLowerCase().includes(q))
+        );
+      }
+      return result;
+    }
+
+    function renderDreams() {
+      const list     = document.getElementById('dream-list');
+      const filtered = getFiltered();
+
+      if (allDreams.length === 0) {
+        list.innerHTML = `
+          <div style="text-align:center; padding:40px 20px; color:var(--text-dim);">
+            <div style="font-size:40px; margin-bottom:12px;">🌙</div>
+            <div style="font-size:16px; margin-bottom:8px;">No dreams logged yet</div>
+            <div style="font-size:14px;">Tap + to log your first dream</div>
+          </div>`;
+        return;
+      }
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div style="text-align:center; padding:30px 20px; color:var(--text-dim); font-size:14px;">No ${filter} dreams found.</div>`;
+        return;
+      }
+
+      const cards = filtered.map(dream => {
+        const preview = (dream.text || '').length > 120 ? dream.text.slice(0, 120) + '...' : (dream.text || '');
+        const tags    = (dream.emotions || []).map(e => {
+          const cls = emotionTags[e.toLowerCase()] || '';
+          return `<span class="tag ${cls}">${e}</span>`;
+        }).join('');
+        const isNightmare = dream.isNightmare ?? false;
+        return `
+          <div class="dream-card" onclick="window.location.href='dream.html?id=${dream.id}'">
+            <div style="display:flex;align-items:center;">
+              <div class="dream-date">${formatDate(dream.createdAt)}</div>
+              ${isNightmare ? '<span class="nightmare-tag">nightmare</span>' : ''}
+              ${dream.lucid ? '<span class="nightmare-tag" style="color:rgba(155,93,229,0.9);background:rgba(155,93,229,0.12);border-color:rgba(155,93,229,0.2);margin-left:4px;">lucid</span>' : ''}
+            </div>
+            <div class="dream-preview">${preview}</div>
+            <div class="dream-card-footer">
+              <div>${tags}</div>
+              <a class="dream-view-btn" href="dream.html?id=${dream.id}" onclick="event.stopPropagation()">View →</a>
+            </div>
+          </div>`;
+      }).join('');
+
+      const count = filtered.length;
+      document.getElementById('dream-count').textContent =
+        `${count} dream${count !== 1 ? 's' : ''}${activeFilter || searchQuery ? ' found' : ' logged'}`;
+
+      list.innerHTML = cards;
+      renderPatternBanner();
+    }
+
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const label = chip.textContent.trim();
+        activeFilter = label === 'All' ? null : label.toLowerCase();
+        renderDreams();
+      });
+    });
+
+    document.getElementById('dream-search').addEventListener('input', e => {
+      searchQuery = e.target.value.trim();
+      renderDreams();
+    });
+
+    const filterRow  = document.getElementById('filter-row');
+    const btnPrev    = document.getElementById('filter-prev');
+    const btnNext    = document.getElementById('filter-next');
+    const SCROLL_AMT = 120;
+
+    function updateArrows() {
+      btnPrev.classList.toggle('hidden', filterRow.scrollLeft <= 0);
+      btnNext.classList.toggle('hidden', filterRow.scrollLeft + filterRow.clientWidth >= filterRow.scrollWidth - 2);
+    }
+
+    btnPrev.addEventListener('click', () => { filterRow.scrollLeft -= SCROLL_AMT; });
+    btnNext.addEventListener('click', () => { filterRow.scrollLeft += SCROLL_AMT; });
+    filterRow.addEventListener('scroll', updateArrows, { passive: true });
+    updateArrows();
+
+    const PATTERN_MIN = 5;
+    let patternGenerated = false;
+
+    function renderPatternBanner() {
+      const banner = document.getElementById('pattern-banner');
+      if (!banner) return;
+
+      if (allDreams.length < PATTERN_MIN) {
+        const remaining = PATTERN_MIN - allDreams.length;
+        banner.innerHTML = `
+          <div class="pattern-card">
+            <div class="pattern-card-header">
+              <div class="pattern-card-title">✨ Pattern Report</div>
+              <div class="pattern-pill">${allDreams.length} / ${PATTERN_MIN}</div>
+            </div>
+            <div class="pattern-narrative" style="margin-bottom:0;">
+              Log ${remaining} more dream${remaining !== 1 ? 's' : ''} to unlock your AI pattern report — a deep look at what your subconscious keeps returning to.
+            </div>
+          </div>`;
+        return;
+      }
+
+      if (!patternGenerated) {
+        banner.innerHTML = `
+          <div class="pattern-card">
+            <div class="pattern-card-header">
+              <div class="pattern-card-title">✨ Pattern Report</div>
+              <div class="pattern-pill">${allDreams.length} dreams</div>
+            </div>
+            <div class="pattern-narrative" style="margin-bottom:12px;">
+              Reverie can now analyse patterns across all your dreams — recurring emotions, symbols, and what your subconscious keeps returning to.
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="generatePatternReport()">Generate My Pattern Report</button>
+          </div>`;
+      }
+    }
+
+    async function generatePatternReport() {
+      const banner = document.getElementById('pattern-banner');
+      banner.innerHTML = `
+        <div class="pattern-card" style="text-align:center; padding:28px 18px;">
+          <div class="spinner" style="margin:0 auto 12px;"></div>
+          <div style="font-size:13px; color:var(--text-muted);">Analysing your dreams…</div>
+        </div>`;
+
+      try {
+        const compressed = allDreams.map(d => ({
+          date:     formatDate(d.createdAt),
+          emotions: d.emotions || [],
+          themes:   d.themes   || [],
+          summary:  d.summary  || '',
+        }));
+
+        const report = await getPatternReport(compressed);
+        patternGenerated = true;
+        renderReport(report);
+      } catch (err) {
+        banner.innerHTML = `
+          <div class="pattern-card">
+            <div class="pattern-card-header"><div class="pattern-card-title">✨ Pattern Report</div></div>
+            <div class="pattern-narrative" style="color:var(--text-muted); margin-bottom:10px;">Couldn't generate report. Please try again.</div>
+            <button class="btn btn-ghost" style="width:100%;" onclick="generatePatternReport()">Retry</button>
+          </div>`;
+      }
+    }
+
+    let currentReport = null;
+
+    function renderReport(report) {
+      currentReport = report;
+      const banner = document.getElementById('pattern-banner');
+      const emotionsHtml = (report.top_emotions     || []).map(e => `<span class="pattern-chip-item">${e}</span>`).join('');
+      const themesHtml   = (report.recurring_themes || []).map(t => `<span class="pattern-chip-item">${t}</span>`).join('');
+      const reflectHtml  = (report.reflections      || []).map(r => `<li>${r}</li>`).join('');
+
+      banner.innerHTML = `
+        <div class="pattern-card">
+          <div class="pattern-card-header">
+            <div class="pattern-card-title">✨ Pattern Report</div>
+            <button style="background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;padding:2px 6px;" onclick="resetPatternReport()">Refresh</button>
+          </div>
+          <div class="pattern-narrative">${report.narrative}</div>
+          <div class="pattern-insight">${report.insight}</div>
+          <div class="pattern-section-label">Top emotions</div>
+          <div class="pattern-chips">${emotionsHtml}</div>
+          <div class="pattern-section-label">Recurring themes</div>
+          <div class="pattern-chips" style="margin-bottom:14px;">${themesHtml}</div>
+          <div class="pattern-section-label">Reflect on this</div>
+          <ul class="pattern-reflections">${reflectHtml}</ul>
+          <button class="btn btn-ghost" style="width:100%; margin-top:14px;" onclick="toggleChat()">💬 Chat about your patterns</button>
+        </div>`;
+
+      document.getElementById('chat-fab').classList.add('visible');
+    }
+
+    function resetPatternReport() {
+      patternGenerated = false;
+      currentReport    = null;
+      chatHistory      = [];
+      chatOpen         = false;
+      document.getElementById('chat-panel').classList.remove('open');
+      document.getElementById('chat-fab').classList.remove('open', 'visible');
+      document.getElementById('chat-messages').innerHTML = '';
+      renderPatternBanner();
+    }
+
+    // ── PATTERN CHAT ──
+    let chatHistory = [];
+    let chatOpen    = false;
+
+    function toggleChat() {
+      chatOpen = !chatOpen;
+      document.getElementById('chat-panel').classList.toggle('open', chatOpen);
+      document.getElementById('chat-fab').classList.toggle('open', chatOpen);
+      if (chatOpen && chatHistory.length === 0) {
+        appendMessage('ai', "I've read through your pattern report. What would you like to explore — the recurring emotions, the themes, or something that surprised you?");
+      }
+      if (chatOpen) setTimeout(() => document.getElementById('chat-input').focus(), 320);
+    }
+
+    function appendMessage(role, text) {
+      const msgs = document.getElementById('chat-messages');
+      const div  = document.createElement('div');
+      div.className = `chat-msg ${role}`;
+      div.textContent = text;
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function showTyping() {
+      const msgs = document.getElementById('chat-messages');
+      const div  = document.createElement('div');
+      div.className = 'chat-msg typing';
+      div.id = 'typing-indicator';
+      div.textContent = '···';
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function hideTyping() {
+      document.getElementById('typing-indicator')?.remove();
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const text  = input.value.trim();
+      if (!text) return;
+      input.value = '';
+
+      appendMessage('user', text);
+      chatHistory.push({ role: 'user', content: text });
+
+      const sendBtn = document.getElementById('chat-send');
+      sendBtn.disabled = true;
+      showTyping();
+
+      const patternContext = currentReport ? [
+        `Pattern report across ${allDreams.length} dreams:`,
+        `Top emotions: ${(currentReport.top_emotions || []).join(', ')}`,
+        `Recurring themes: ${(currentReport.recurring_themes || []).join(' | ')}`,
+        `Narrative: ${currentReport.narrative}`,
+        `Key insight: ${currentReport.insight}`,
+      ].join('\n') : null;
+
+      try {
+        const { reply } = await sendChatMessage(
+          'pattern-chat',
+          text,
+          patternContext,
+          chatHistory.slice(0, -1)
+        );
+        hideTyping();
+        appendMessage('ai', reply);
+        chatHistory.push({ role: 'assistant', content: reply });
+      } catch {
+        hideTyping();
+        appendMessage('ai', "Sorry, I couldn't connect right now. Try again in a moment.");
+        chatHistory.pop();
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    document.getElementById('chat-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+
+    window.toggleChat            = toggleChat;
+    window.sendMessage           = sendMessage;
+    window.generatePatternReport = generatePatternReport;
+    window.resetPatternReport    = resetPatternReport;
+
+    requireAuth(async user => {
+      allDreams = await getDreams(user.uid);
+      renderDreams();
+    });
+  </script>
+</body>
+</html>

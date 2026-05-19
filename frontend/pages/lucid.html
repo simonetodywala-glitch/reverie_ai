@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Lucid Dreams · Reverie</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    /* ── LUCID PAGE ── */
+    .lucid-hero {
+      text-align: center; padding: 32px 0 20px;
+    }
+    .lucid-hero-icon { font-size: 48px; margin-bottom: 12px; }
+    .lucid-hero-title { font-size: 26px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .lucid-hero-sub { font-size: 14px; color: var(--text-dim); line-height: 1.5; }
+
+    /* ── REALITY CHECK ── */
+    .rc-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 24px; padding: 24px 20px; text-align: center; margin-bottom: 16px;
+    }
+    .rc-title { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-soft); margin-bottom: 16px; }
+    .rc-btn {
+      width: 140px; height: 140px; border-radius: 50%;
+      background: linear-gradient(135deg, rgba(124,58,237,0.22), rgba(155,93,229,0.1));
+      border: 2px solid rgba(155,93,229,0.45); cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      margin: 0 auto 16px; transition: transform 0.15s, background 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .rc-btn:active { transform: scale(0.93); background: linear-gradient(135deg, rgba(124,58,237,0.4), rgba(155,93,229,0.2)); }
+    .rc-btn-label { font-size: 15px; font-weight: 700; color: #fff; margin-top: 6px; }
+    .rc-btn-sub { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+    .rc-count { font-size: 32px; font-weight: 700; color: var(--text); }
+    .rc-count-label { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+    .rc-goal { font-size: 12px; color: var(--accent-soft); margin-top: 8px; }
+    .rc-progress-bar {
+      height: 4px; background: var(--border); border-radius: 2px; margin-top: 12px; overflow: hidden;
+    }
+    .rc-progress-fill { height: 100%; background: linear-gradient(90deg, rgba(124,58,237,0.8), rgba(155,93,229,0.9)); border-radius: 2px; transition: width 0.4s ease; }
+    .rc-streak { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 14px; font-size: 13px; color: var(--text-dim); }
+    .rc-streak-flame { font-size: 16px; }
+
+    /* ── MILD INTENTION ── */
+    .mild-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 24px; padding: 20px; margin-bottom: 16px;
+    }
+    .mild-title { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-soft); margin-bottom: 4px; }
+    .mild-desc { font-size: 12px; color: var(--text-dim); margin-bottom: 14px; line-height: 1.5; }
+    .mild-template {
+      background: rgba(124,58,237,0.08); border: 1px solid rgba(155,93,229,0.15);
+      border-radius: 12px; padding: 12px 14px; margin-bottom: 12px;
+      font-size: 14px; color: var(--text-dim); line-height: 1.6; font-style: italic;
+    }
+    .mild-input {
+      width: 100%; background: var(--input-bg, rgba(255,255,255,0.05));
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 14px; color: var(--text); font-size: 14px;
+      font-family: inherit; resize: none; box-sizing: border-box; outline: none;
+      line-height: 1.6;
+    }
+    .mild-input:focus { border-color: rgba(155,93,229,0.5); }
+    .mild-save-row { display: flex; justify-content: flex-end; margin-top: 10px; }
+
+    /* ── LUCID STATS ── */
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 18px; padding: 16px; text-align: center;
+    }
+    .stat-num { font-size: 28px; font-weight: 700; color: var(--text); }
+    .stat-label { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
+
+    /* ── TECHNIQUE CARDS ── */
+    .technique-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 18px; padding: 18px 20px; margin-bottom: 10px; cursor: pointer;
+    }
+    .technique-header { display: flex; align-items: center; gap: 12px; }
+    .technique-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-soft); background: rgba(155,93,229,0.12); border-radius: 20px; padding: 2px 8px; flex-shrink: 0; }
+    .technique-name { font-size: 15px; font-weight: 600; color: var(--text); flex: 1; }
+    .technique-arrow { color: var(--text-dim); transition: transform 0.25s; }
+    .technique-body { font-size: 13px; color: var(--text-dim); line-height: 1.75; margin-top: 14px; display: none; }
+    .technique-body.open { display: block; }
+
+    /* ── LUCID DREAM LOG ── */
+    .lucid-log-card {
+      background: var(--card); border: 1px solid rgba(155,93,229,0.25);
+      border-radius: 16px; padding: 14px 16px; margin-bottom: 8px; cursor: pointer;
+    }
+    .lucid-log-date { font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
+    .lucid-log-summary { font-size: 13px; color: var(--text); line-height: 1.5; }
+    .lucid-badge { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(155,93,229,0.9); background: rgba(155,93,229,0.12); border-radius: 20px; padding: 2px 8px; margin-left: 6px; }
+
+    .empty-state { text-align: center; padding: 24px 0; color: var(--text-dim); font-size: 13px; line-height: 1.7; }
+
+    /* ── NIGHTMARE CHART ── */
+    .nm-chart-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 18px 16px; margin-bottom: 16px;
+    }
+    .nm-chart-label { font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent-soft); margin-bottom: 14px; }
+    .nm-chart { display: flex; gap: 4px; align-items: flex-end; height: 48px; }
+    .nm-bar { flex: 1; border-radius: 4px 4px 0 0; min-height: 4px; transition: height 0.3s; }
+    .nm-bar.nightmare { background: rgba(239,100,100,0.7); }
+    .nm-bar.clear     { background: rgba(99,198,155,0.6); }
+    .nm-bar.none      { background: rgba(255,255,255,0.08); }
+    .nm-dates { display: flex; justify-content: space-between; margin-top: 6px; }
+    .nm-date-label { font-size: 10px; color: var(--text-dim); }
+    .nm-legend { display: flex; gap: 14px; margin-top: 12px; }
+    .nm-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-dim); }
+    .nm-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+  <div class="app-frame">
+    <div class="page-header">🌀 Lucid Dreaming</div>
+
+    <div class="main-content page-content">
+
+      <div class="lucid-hero">
+        <div class="lucid-hero-sub">Train your mind to wake up inside your dreams</div>
+      </div>
+
+      <!-- ── NIGHTMARE FREQUENCY ── -->
+      <div class="nm-chart-card" id="nm-chart-card" style="display:none;">
+        <div class="nm-chart-label">Nightmare frequency · last 14 days</div>
+        <div class="nm-chart" id="nm-chart"></div>
+        <div class="nm-dates" id="nm-dates"></div>
+        <div class="nm-legend">
+          <div class="nm-legend-item"><div class="nm-legend-dot" style="background:rgba(239,100,100,0.7);"></div> Nightmare</div>
+          <div class="nm-legend-item"><div class="nm-legend-dot" style="background:rgba(99,198,155,0.6);"></div> Clear</div>
+          <div class="nm-legend-item"><div class="nm-legend-dot" style="background:rgba(255,255,255,0.08);"></div> No data</div>
+        </div>
+      </div>
+
+      <!-- ── STATS ── -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-num" id="stat-lucid">–</div>
+          <div class="stat-label">Lucid dreams</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-streak">–</div>
+          <div class="stat-label">Day streak 🔥</div>
+        </div>
+      </div>
+
+      <!-- ── REALITY CHECK ── -->
+      <div class="rc-card">
+        <div class="rc-title">Reality Checks</div>
+        <button class="rc-btn" id="rc-btn" onclick="doRealityCheck()">
+          <div style="font-size:28px;">👋</div>
+          <div class="rc-btn-label">Am I dreaming?</div>
+          <div class="rc-btn-sub">Tap to check</div>
+        </button>
+        <div class="rc-count" id="rc-count">0</div>
+        <div class="rc-count-label">checks today</div>
+        <div class="rc-progress-bar">
+          <div class="rc-progress-fill" id="rc-fill" style="width:0%"></div>
+        </div>
+        <div class="rc-goal" id="rc-goal">Goal: 10 checks per day</div>
+        <div class="rc-hint">Each time you tap, actually pause and check — try pushing a finger through your palm. In real life it won't work. In a dream, it will. Do this enough and your brain starts doing it in dreams automatically, which is often the moment you go lucid.</div>
+        <div class="rc-streak" id="rc-streak-row" style="display:none;">
+          <span class="rc-streak-flame">🔥</span>
+          <span id="rc-streak-text"></span>
+        </div>
+      </div>
+
+      <!-- ── MILD INTENTION ── -->
+      <div class="mild-card">
+        <div class="mild-title">Tonight's MILD Intention</div>
+        <div class="mild-desc">Before sleep, repeat your intention until you feel it. When a dream starts to fade, stay still and set it again.</div>
+        <div class="mild-template">"Tonight I will notice I'm dreaming. When something unusual happens, I will realise — this is a dream."</div>
+        <textarea class="mild-input" id="mild-input" rows="2"
+          placeholder="Write your own intention, or use the template above…"></textarea>
+        <div class="mild-save-row">
+          <button class="btn btn-ghost" style="font-size:13px;" onclick="saveIntention()">Save intention</button>
+        </div>
+      </div>
+
+      <!-- ── TECHNIQUES ── -->
+      <div class="section-label" style="margin-top:4px;">Techniques</div>
+
+      <div class="technique-card" onclick="toggleTechnique(this)">
+        <div class="technique-header">
+          <span class="technique-tag">MILD</span>
+          <span class="technique-name">Mnemonic Induction</span>
+          <span class="technique-arrow">›</span>
+        </div>
+        <div class="technique-body">
+          <strong>How it works:</strong> Before sleep, vividly imagine yourself becoming lucid in a recent dream. Repeat your intention ("I will know I'm dreaming") as you fall asleep.<br><br>
+          <strong>Best time:</strong> After a natural wake-up, when you've just been in REM sleep. Set an alarm for 5–6 hours after sleep, wake up briefly, then go back to sleep with your intention.<br><br>
+          <strong>Success tip:</strong> The more detailed your mental rehearsal, the stronger the signal to your dreaming brain.
+        </div>
+      </div>
+
+      <div class="technique-card" onclick="toggleTechnique(this)">
+        <div class="technique-header">
+          <span class="technique-tag">WBTB</span>
+          <span class="technique-name">Wake Back to Bed</span>
+          <span class="technique-arrow">›</span>
+        </div>
+        <div class="technique-body">
+          <strong>How it works:</strong> Set an alarm for 5–6 hours after you fall asleep. Wake up and stay awake for 20–30 minutes (read about lucid dreaming, do light activity). Then go back to sleep with your intention.<br><br>
+          <strong>Why it works:</strong> You re-enter REM sleep quickly and your mind is primed for awareness — a perfect window for lucidity.<br><br>
+          <strong>Combine with MILD</strong> for significantly higher success rates.
+        </div>
+      </div>
+
+      <div class="technique-card" onclick="toggleTechnique(this)">
+        <div class="technique-header">
+          <span class="technique-tag">Reality Testing</span>
+          <span class="technique-name">Habit of Questioning</span>
+          <span class="technique-arrow">›</span>
+        </div>
+        <div class="technique-body">
+          <strong>How it works:</strong> During the day, regularly ask "Am I dreaming?" and actually check — look at your hands, try to push a finger through your palm, read text twice (it changes in dreams).<br><br>
+          <strong>The goal:</strong> Build it into a genuine habit so the same check happens automatically inside a dream.<br><br>
+          <strong>Best triggers:</strong> Every time you walk through a door, check your phone, or feel a strong emotion — ask the question.
+        </div>
+      </div>
+
+      <div class="technique-card" onclick="toggleTechnique(this)">
+        <div class="technique-header">
+          <span class="technique-tag">WILD</span>
+          <span class="technique-name">Wake-Initiated Lucid Dream</span>
+          <span class="technique-arrow">›</span>
+        </div>
+        <div class="technique-body">
+          <strong>How it works:</strong> Transition directly from waking consciousness into a dream — maintaining awareness as your body falls asleep. Best attempted after WBTB.<br><br>
+          <strong>Process:</strong> Lie completely still. Focus on the hypnagogic imagery (patterns, sounds) behind your closed eyes. Don't react — just observe, and let yourself slide into the dream.<br><br>
+          <strong>Advanced:</strong> This takes practice but produces the most vivid and controllable lucid dreams.
+        </div>
+      </div>
+
+      <!-- ── LUCID DREAM LOG ── -->
+      <div class="section-label" style="margin-top:4px;">Your lucid dreams</div>
+      <div id="lucid-log-list">
+        <div class="sc-loading"><div class="spinner"></div>Loading…</div>
+      </div>
+
+    </div>
+
+    <nav class="bottom-nav">
+      <div class="nav-group">
+        <a class="nav-link" href="../index.html">Home</a>
+        <a class="nav-link" href="dreams.html">Dreams</a>
+      </div>
+      <a class="nav-plus" href="journal.html">+</a>
+      <div class="nav-group">
+        <a class="nav-link active" href="lucid.html">Lucid</a>
+        <a class="nav-link" href="winddown.html">Wind Down</a>
+      </div>
+    </nav>
+  </div>
+
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    import { saveLucidLog, getLucidLog, getLucidStreak, getLucidDreams, getNightmareCheckins } from '../js/firebase.js';
+
+    const TODAY = new Date().toISOString().slice(0, 10);
+    let _uid  = null;
+    let _log  = { date: TODAY, realityChecks: 0, intention: '' };
+
+    function updateRCDisplay() {
+      const n    = _log.realityChecks;
+      const goal = 10;
+      document.getElementById('rc-count').textContent = n;
+      document.getElementById('rc-fill').style.width  = Math.min(100, (n / goal) * 100) + '%';
+      document.getElementById('rc-goal').textContent  = n >= goal
+        ? '✓ Goal reached!'
+        : `Goal: ${goal} checks per day · ${goal - n} to go`;
+    }
+
+    window.doRealityCheck = async function() {
+      _log.realityChecks++;
+      updateRCDisplay();
+      const btn = document.getElementById('rc-btn');
+      btn.style.background = 'linear-gradient(135deg, rgba(124,58,237,0.5), rgba(155,93,229,0.3))';
+      setTimeout(() => btn.style.background = '', 300);
+      if (_uid) await saveLucidLog(_uid, _log).catch(() => {});
+    };
+
+    window.saveIntention = async function() {
+      const val = document.getElementById('mild-input').value.trim();
+      _log.intention = val;
+      if (_uid) await saveLucidLog(_uid, _log).catch(() => {});
+      const btn = document.querySelector('.mild-save-row .btn');
+      btn.textContent = '✓ Saved'; setTimeout(() => btn.textContent = 'Save intention', 1800);
+    };
+
+    window.toggleTechnique = function(card) {
+      const body  = card.querySelector('.technique-body');
+      const arrow = card.querySelector('.technique-arrow');
+      const open  = body.classList.toggle('open');
+      arrow.style.transform = open ? 'rotate(90deg)' : '';
+    };
+
+    function renderLucidLog(dreams) {
+      const wrap = document.getElementById('lucid-log-list');
+      if (!dreams.length) {
+        wrap.innerHTML = `<div class="empty-state">No lucid dreams logged yet.<br>Mark a dream as lucid from the dream detail page.</div>`;
+        return;
+      }
+      wrap.innerHTML = dreams.map(d => {
+        const date = d.createdAt?.toDate
+          ? d.createdAt.toDate().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+          : d.date || '';
+        return `<div class="lucid-log-card" onclick="location.href='dream.html?id=${d.id}'">
+          <div class="lucid-log-date">${date} <span class="lucid-badge">lucid</span></div>
+          <div class="lucid-log-summary">${(d.summary || d.text || '').slice(0, 120)}…</div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderNightmareChart(checkins) {
+      const days = 14;
+      const map  = {};
+      checkins.forEach(c => { map[c.date] = c.hadNightmare; });
+
+      const bars = []; const labels = [];
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        const val = map[key];
+        const cls = val === true ? 'nightmare' : val === false ? 'clear' : 'none';
+        const h   = val === true ? 44 : val === false ? 28 : 8;
+        bars.push(`<div class="nm-bar ${cls}" style="height:${h}px;" title="${key}"></div>`);
+        if (i === days - 1 || i === 0 || i === Math.floor(days / 2)) {
+          labels.push(`<span class="nm-date-label">${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>`);
+        } else {
+          labels.push(`<span class="nm-date-label"></span>`);
+        }
+      }
+
+      if (checkins.length > 0) {
+        document.getElementById('nm-chart-card').style.display = 'block';
+        document.getElementById('nm-chart').innerHTML  = bars.join('');
+        document.getElementById('nm-dates').innerHTML  = labels.join('');
+      }
+    }
+
+    requireAuth(async user => {
+      _uid = user.uid;
+
+      const [log, streak, lucidDreams, checkins] = await Promise.all([
+        getLucidLog(user.uid, TODAY),
+        getLucidStreak(user.uid),
+        getLucidDreams(user.uid),
+        getNightmareCheckins(user.uid, 14),
+      ]);
+
+      _log = { ...log, date: TODAY };
+      updateRCDisplay();
+
+      if (_log.intention) document.getElementById('mild-input').value = _log.intention;
+
+      document.getElementById('stat-lucid').textContent  = lucidDreams.length;
+      document.getElementById('stat-streak').textContent = streak;
+
+      if (streak > 0) {
+        const row = document.getElementById('rc-streak-row');
+        row.style.display = 'flex';
+        document.getElementById('rc-streak-text').textContent = `${streak}-day reality check streak`;
+      }
+
+      renderLucidLog(lucidDreams);
+      renderNightmareChart(checkins);
+    });
+  </script>
+
+</body>
+</html>

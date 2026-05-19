@@ -1,0 +1,23 @@
+/* ── NIGHT (default) — deep purple matching old #0a0015 ── */
+:root, ::backdrop {
+    --primary:            oklch(0.68 0.22 299);
+    --onPrimary:          oklch(0.06 0.05 299);
+    --background:         oklch(0.06 0.05 299);
+    --onBackground:       oklch(0.90 0.10 299);
+    --surface:            oklch(0.13 0.10 299);
+    --onSurface:          oklch(0.68 0.10 299);
+    --container:          oklch(0.21 0.16 299);
+    --onContainer:        oklch(0.90 0.10 299);
+}
+
+/* ── MORNING — sky blue matching old #c8eeff ── */
+body.morning {
+    --primary:            oklch(0.46 0.14 225);
+    --onPrimary:          oklch(0.95 0.02 225);
+    --background:         oklch(0.92 0.05 225);
+    --onBackground:       oklch(0.18 0.08 225);
+    --surface:            oklch(0.85 0.07 225);
+    --onSurface:          oklch(0.42 0.12 225);
+    --container:          oklch(0.76 0.09 225);
+    --onContainer:        oklch(0.18 0.08 225);
+}

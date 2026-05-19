@@ -1,0 +1,46 @@
+:root, ::backdrop{
+    --hue: 300;
+
+    --secondary-hue: calc(var(--hue) - 40);
+    --tertiary-hue: calc(var(--hue) + 40);
+    
+    --bg-chroma: 0.02;
+    --surface-chroma: 0.04;
+    --container-chroma: 0.08;
+    --accent-chroma: 0.14;
+
+    --bg-lightness: 0.2;
+    --surface-lightness: 0.3;
+    --container-lightness: 0.4;
+
+    --accent-lightness: 0.7;
+    --text-lightness: 0.8;
+
+    --primary:                   oklch(var(--accent-lightness)    var(--accent-chroma)     var(--hue));
+    --onPrimary:                 oklch(var(--bg-lightness)        var(--bg-chroma)         var(--hue));
+    --background:                oklch(var(--bg-lightness)        var(--bg-chroma)         var(--hue));
+    --onBackground:              oklch(var(--text-lightness)      var(--surface-chroma)    var(--hue));
+    --surface:                   oklch(var(--surface-lightness)   var(--surface-chroma)    var(--hue));
+    --onSurface:                 oklch(var(--accent-lightness)    var(--surface-chroma)    var(--hue));
+    --container:                 oklch(var(--container-lightness) var(--container-chroma)  var(--hue));
+    --onContainer:               oklch(var(--text-lightness)      var(--container-chroma)  var(--hue));
+
+    --secondary:                 oklch(var(--accent-lightness)    var(--accent-chroma)     var(--secondary-hue));
+    --onSecondary:               oklch(var(--bg-lightness)        var(--bg-chroma)         var(--secondary-hue));
+    --secondaryBackground:       oklch(var(--bg-lightness)        var(--bg-chroma)         var(--secondary-hue));
+    --onSecondaryBackground:     oklch(var(--text-lightness)      var(--surface-chroma)    var(--secondary-hue));
+    --secondarySurface:          oklch(var(--surface-lightness)   var(--surface-chroma)    var(--secondary-hue));
+    --onSecondarySurface:        oklch(var(--accent-lightness)    var(--surface-chroma)    var(--secondary-hue));
+    --secondaryContainer:        oklch(var(--container-lightness) var(--container-chroma)  var(--secondary-hue));
+    --onSecondaryContainer:      oklch(var(--text-lightness)      var(--container-chroma)  var(--secondary-hue));
+
+    --tertiary:                  oklch(var(--accent-lightness)    var(--accent-chroma)     var(--tertiary-hue));
+    --onTertiary:                oklch(var(--bg-lightness)        var(--bg-chroma)         var(--tertiary-hue));
+    --tertiaryBackground:        oklch(var(--bg-lightness)        var(--bg-chroma)         var(--tertiary-hue));
+    --onTertiaryBackground:      oklch(var(--text-lightness)      var(--surface-chroma)    var(--tertiary-hue));
+    --tertiarySurface:           oklch(var(--surface-lightness)   var(--surface-chroma)    var(--tertiary-hue));
+    --onTertiarySurface:         oklch(var(--accent-lightness)    var(--surface-chroma)    var(--tertiary-hue));
+    --tertiaryContainer:         oklch(var(--container-lightness) var(--container-chroma)  var(--tertiary-hue));
+    --onTertiaryContainer:       oklch(var(--text-lightness)      var(--container-chroma)  var(--tertiary-hue));
+
+}

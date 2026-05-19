@@ -1,0 +1,1993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Reverie — Wind Down</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    /* ── ROUTINE CARDS ── */
+    .routine-card {
+      background: var(--card); border-radius: 20px; padding: 18px 20px;
+      margin-bottom: 12px; cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: background 0.2s, transform 0.15s;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .routine-card:hover  { background: var(--card-hover); transform: translateY(-2px); }
+    .routine-card:active { transform: scale(0.98); }
+    .routine-icon { font-size: 30px; flex-shrink: 0; }
+    .routine-name { font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+    .routine-note { font-size: 12px; color: var(--accent-soft); font-style: italic; margin-top: 3px; }
+    .routine-arrow { margin-left: auto; font-size: 18px; color: var(--text-muted); flex-shrink: 0; }
+    #routine-toast { font-size: 12.5px; color: var(--accent-soft); text-align: center; padding: 6px 0; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
+
+    /* ── SOUNDSCAPE SECTION ── */
+    .sc-loading { display: flex; align-items: center; gap: 10px; padding: 18px 0; font-size: 13px; color: var(--text-muted); }
+    .sc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .sc-card {
+      background: var(--surface); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 18px; padding: 16px 14px; cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s; position: relative;
+    }
+    .sc-card:hover  { background: var(--card); transform: translateY(-2px); }
+    .sc-card:active { transform: scale(0.97); }
+    .sc-card.active { border-color: var(--accent); background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(155,93,229,0.06)); }
+    .sc-card-emoji { font-size: 26px; margin-bottom: 9px; display: block; }
+    .sc-card-name  { font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 5px; line-height: 1.25; }
+    .sc-card-desc  { font-size: 11px; color: var(--text-muted); line-height: 1.45; }
+    .sc-card.active .sc-card-name { color: var(--accent-soft); }
+    .sc-playing-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); position: absolute; top: 12px; right: 12px; animation: pulse-dot 1.4s ease-in-out infinite; }
+    @keyframes pulse-dot { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(0.7); } }
+    .sc-divider { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; margin: 16px 0 12px; }
+    .sc-divider::before,.sc-divider::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.07); }
+    .sc-input-row { display: flex; gap: 8px; }
+    .sc-input { flex:1; font-size:13px; padding:11px 14px; border-radius:12px; background:var(--surface); border:1px solid rgba(255,255,255,0.08); color:var(--text); outline:none; transition:border-color 0.2s; }
+    .sc-input:focus { border-color:rgba(124,58,237,0.4); }
+    .sc-input::placeholder { color:var(--text-muted); }
+    .sc-gen-btn { padding:0 16px; border-radius:12px; border:none; cursor:pointer; background:linear-gradient(135deg,var(--accent),var(--accent-soft)); color:#fff; font-size:18px; font-weight:700; transition:transform 0.15s; box-shadow:0 3px 12px rgba(124,58,237,0.4); display:flex; align-items:center; justify-content:center; min-width:46px; }
+    .sc-gen-btn:active { transform:scale(0.93); }
+    .sc-gen-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+    /* ── SOUNDSCAPE PLAYER ── */
+    .soundscape-player { display:flex; align-items:center; gap:14px; background:var(--surface); border-radius:16px; padding:14px 16px; margin-top:12px; }
+    .soundscape-play-btn { width:44px; height:44px; border-radius:50%; flex-shrink:0; background:linear-gradient(135deg,var(--accent),var(--accent-soft)); border:none; color:#fff; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:transform 0.15s; box-shadow:0 4px 14px rgba(124,58,237,0.45); }
+    .soundscape-play-btn:active { transform:scale(0.92); }
+    .soundscape-info { flex:1; min-width:0; }
+    .soundscape-title { font-size:13.5px; font-weight:600; color:var(--text); }
+    .soundscape-sub   { font-size:11px; color:var(--text-muted); margin-top:2px; }
+    .soundscape-bars  { display:flex; align-items:center; gap:2px; height:24px; flex-shrink:0; }
+    .soundscape-bar   { width:3px; border-radius:2px; background:var(--accent-soft); opacity:0.4; }
+    .soundscape-bars.playing .soundscape-bar { opacity:0.85; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(1) { animation:sbar 0.9s ease-in-out infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(2) { animation:sbar 0.9s ease-in-out 0.15s infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(3) { animation:sbar 0.9s ease-in-out 0.3s infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(4) { animation:sbar 0.9s ease-in-out 0.45s infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(5) { animation:sbar 0.9s ease-in-out 0.6s infinite; }
+    @keyframes sbar { 0%,100% { height:5px; } 50% { height:20px; } }
+
+    /* ── AI INTENTION CARD ── */
+    .intention-card { background:linear-gradient(135deg,rgba(124,58,237,0.12),rgba(155,93,229,0.05)); border:1px solid rgba(155,93,229,0.22); border-radius:16px; padding:14px 16px; margin-bottom:14px; }
+    .intention-label { font-size:10px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; color:var(--accent-soft); margin-bottom:5px; }
+    .intention-text  { font-size:14px; color:var(--text); line-height:1.55; }
+
+    /* ── ACTIVITY MODALS (shared) ── */
+    .activity-modal {
+      position: fixed; inset: 0; z-index: 500;
+      background: linear-gradient(160deg, #06001c 0%, #0d0225 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s ease;
+      padding: 52px 28px 40px; text-align: center;
+    }
+    .activity-modal.open { opacity: 1; pointer-events: all; }
+    .modal-close {
+      position: absolute; top: 20px; right: 20px;
+      width: 38px; height: 38px; border-radius: 50%;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.45); font-size: 20px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, color 0.2s; line-height: 1; padding: 0;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.85); }
+    .modal-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-soft); opacity: 0.75; }
+    .modal-icon { font-size: 54px; margin: 20px 0 14px; display: block; line-height: 1; }
+    .modal-main { font-family: 'Nunito', sans-serif; font-size: 26px; font-weight: 800; color: var(--text); line-height: 1.2; }
+    .modal-body-text { font-size: 15px; color: var(--text-muted); line-height: 1.65; max-width: 290px; margin: 10px auto 0; }
+    .modal-step { font-size: 11px; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 8px; }
+    .modal-btn {
+      padding: 13px 32px; border-radius: 40px; border: none; cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      color: #fff; font-size: 15px; font-weight: 700;
+      box-shadow: 0 4px 18px rgba(124,58,237,0.4);
+      transition: transform 0.15s; margin-top: 28px; display: inline-block;
+    }
+    .modal-btn:active { transform: scale(0.95); }
+    .modal-btn-sm {
+      padding: 10px 22px; border-radius: 40px;
+      border: 1px solid rgba(255,255,255,0.12); cursor: pointer;
+      background: transparent; color: var(--text-muted);
+      font-size: 13px; transition: border-color 0.2s, color 0.2s; margin-top: 12px; display: inline-block;
+    }
+    .modal-btn-sm:hover { border-color: rgba(255,255,255,0.28); color: var(--text); }
+    .modal-dots { display: flex; gap: 8px; justify-content: center; margin-top: 22px; }
+    .modal-dot  { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.13); transition: background 0.35s; }
+    .modal-dot.active { background: var(--accent-soft); }
+    .modal-dot.done   { background: rgba(155,93,229,0.4); }
+
+    /* ── BREATHING ── */
+    .breath-circle {
+      width: 154px; height: 154px; border-radius: 50%;
+      background: radial-gradient(circle at 38% 38%, rgba(155,93,229,0.5), rgba(80,20,180,0.12));
+      border: 2px solid rgba(155,93,229,0.3);
+      box-shadow: 0 0 70px rgba(124,58,237,0.18), inset 0 0 30px rgba(155,93,229,0.06);
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 4s cubic-bezier(0.4,0,0.2,1);
+      margin: 22px 0 18px;
+    }
+    .breath-circle.inhale { transform: scale(1.52); }
+    .breath-circle.exhale { transform: scale(1.0); }
+    .breath-count-inner { font-family: 'Nunito', sans-serif; font-size: 40px; font-weight: 300; color: rgba(255,255,255,0.85); }
+    .breath-phase { font-family: 'Nunito', sans-serif; font-size: 22px; font-weight: 700; color: var(--text); }
+    .breath-hint  { font-size: 13px; color: var(--text-muted); margin-top: 5px; }
+    .breath-dots  { display: flex; gap: 10px; margin-top: 26px; }
+    .breath-dot   { width: 9px; height: 9px; border-radius: 50%; background: rgba(155,93,229,0.2); transition: background 0.4s; }
+    .breath-dot.done   { background: rgba(155,93,229,0.55); }
+    .breath-dot.active { background: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.5); }
+
+    /* ── BODY SCAN ── */
+    .bs-bar-wrap { width: 240px; height: 3px; background: rgba(255,255,255,0.08); border-radius: 3px; margin: 30px auto 8px; overflow: hidden; }
+    .bs-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-soft)); border-radius: 3px; transition: width 1s linear; }
+
+    /* ── PROMPT-BASED (journal/gratitude) ── */
+    .modal-prompt { font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 700; color: var(--text); line-height: 1.5; max-width: 280px; margin: 20px auto 10px; }
+    .modal-hint   { font-size: 13px; color: rgba(155,93,229,0.75); font-style: italic; }
+
+    /* ── VISUALIZATION ── */
+    .viz-text { font-size: 17px; color: var(--text); line-height: 1.75; max-width: 290px; margin: 22px auto 0; transition: opacity 0.6s ease; font-weight: 300; }
+
+    /* ── STORY ── */
+    .story-text {
+      font-size: 15px; color: var(--text); line-height: 1.85; text-align: left;
+      max-height: 52vh; overflow-y: auto; padding: 20px 18px;
+      background: rgba(255,255,255,0.03); border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+      margin: 18px 0 0; width: 100%; max-width: 340px;
+    }
+    .story-text::-webkit-scrollbar { width: 3px; }
+    .story-text::-webkit-scrollbar-thumb { background: rgba(155,93,229,0.35); border-radius: 3px; }
+    .story-player {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(124,58,237,0.1); border: 1px solid rgba(155,93,229,0.2);
+      border-radius: 40px; padding: 10px 16px 10px 10px;
+      margin-top: 16px; width: 100%; max-width: 340px;
+    }
+    .story-play-btn {
+      width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      color: #fff; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 3px 12px rgba(124,58,237,0.45); transition: transform 0.15s;
+    }
+    .story-play-btn:active { transform: scale(0.92); }
+    .story-play-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .story-player-label { flex: 1; font-size: 13px; color: var(--text-muted); }
+    .story-bars { display: flex; align-items: center; gap: 2px; height: 18px; }
+    .story-bar  { width: 3px; border-radius: 2px; background: var(--accent-soft); opacity: 0.35; }
+    .story-bars.playing .story-bar { opacity: 0.8; }
+    .story-bars.playing .story-bar:nth-child(1) { animation: sbar 1.1s ease-in-out infinite; }
+    .story-bars.playing .story-bar:nth-child(2) { animation: sbar 1.1s ease-in-out 0.2s infinite; }
+    .story-bars.playing .story-bar:nth-child(3) { animation: sbar 1.1s ease-in-out 0.4s infinite; }
+    .story-bars.playing .story-bar:nth-child(4) { animation: sbar 1.1s ease-in-out 0.6s infinite; }
+
+    /* ── STORY PICKER ── */
+    .sp-entry-card {
+      border-radius: 20px; padding: 18px 20px; margin-top: 24px; cursor: pointer;
+      border: 1px solid rgba(155,93,229,0.3);
+      background: linear-gradient(135deg, rgba(124,58,237,0.13), rgba(155,93,229,0.05));
+      transition: background 0.2s, transform 0.15s;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .sp-entry-card:hover  { background: linear-gradient(135deg, rgba(124,58,237,0.22), rgba(155,93,229,0.1)); transform: translateY(-2px); }
+    .sp-entry-card:active { transform: scale(0.98); }
+
+    /* ── IRT REHEARSAL CARD ── */
+    .irt-rehearse-card {
+      border-radius: 20px; padding: 18px 20px; margin-top: 16px; cursor: pointer;
+      border: 1px solid rgba(239,100,100,0.3);
+      background: linear-gradient(135deg, rgba(239,100,100,0.08), rgba(155,93,229,0.05));
+      transition: background 0.2s, transform 0.15s;
+    }
+    .irt-rehearse-card:hover { background: linear-gradient(135deg, rgba(239,100,100,0.15), rgba(155,93,229,0.08)); transform: translateY(-2px); }
+    .irt-rehearse-header { display: flex; align-items: center; gap: 16px; }
+    .irt-badge-sm { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(239,100,100,0.85); background: rgba(239,100,100,0.1); border-radius: 20px; padding: 2px 9px; margin-left: 6px; }
+    .irt-rehearse-text { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.7; margin-top: 10px; max-height: 120px; overflow-y: auto; }
+    .irt-rehearse-text::-webkit-scrollbar { width: 3px; }
+    .irt-rehearse-text::-webkit-scrollbar-thumb { background: rgba(239,100,100,0.3); border-radius: 3px; }
+    .irt-rehearse-actions { display: flex; gap: 8px; margin-top: 14px; }
+    .irt-rehearse-actions .btn { flex: 1; }
+
+    /* ── REHEARSAL TIMER MODAL ── */
+    .rt-modal {
+      position: fixed; inset: 0; z-index: 650;
+      background: #04000f;
+      display: flex; flex-direction: column;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    }
+    .rt-modal.open { opacity: 1; pointer-events: all; }
+    .rt-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 52px 20px 12px; flex-shrink: 0;
+      max-width: 480px; width: 100%; margin: 0 auto; box-sizing: border-box;
+    }
+    .rt-title { font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(239,100,100,0.7); }
+    .rt-close { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.06); border: none; color: rgba(255,255,255,0.5); font-size: 16px; cursor: pointer; }
+    .rt-timer-ring {
+      width: 100px; height: 100px; border-radius: 50%; flex-shrink: 0;
+      border: 2px solid rgba(239,100,100,0.3);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      transition: border-color 0.5s;
+    }
+    .rt-timer-ring.active { border-color: rgba(239,100,100,0.75); }
+    .rt-timer-ring.done   { border-color: rgba(99,198,155,0.8); }
+    .rt-time { font-size: 26px; font-weight: 700; color: #fff; line-height: 1; }
+    .rt-time-label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 3px; }
+    .rt-text-scroll {
+      flex: 1; overflow-y: auto; padding: 0 24px;
+      max-width: 480px; margin: 0 auto; width: 100%; box-sizing: border-box;
+    }
+    .rt-text-scroll::-webkit-scrollbar { width: 3px; }
+    .rt-text-scroll::-webkit-scrollbar-thumb { background: rgba(239,100,100,0.3); border-radius: 3px; }
+    .rt-dream-text { font-size: 15px; color: rgba(255,255,255,0.8); line-height: 2; white-space: pre-wrap; }
+    .rt-footer {
+      padding: 16px 24px 40px; flex-shrink: 0;
+      max-width: 480px; margin: 0 auto; width: 100%; box-sizing: border-box;
+      display: flex; gap: 10px;
+    }
+    .rt-footer .btn { flex: 1; }
+
+    /* ── GUIDED ROUTINE ── */
+    .gr-start-card {
+      border-radius: 20px; padding: 18px 20px; margin-bottom: 20px; cursor: pointer;
+      border: 1px solid rgba(155,93,229,0.45);
+      background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(155,93,229,0.08));
+      transition: background 0.2s, transform 0.15s;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .gr-start-card:hover  { background: linear-gradient(135deg, rgba(124,58,237,0.32), rgba(155,93,229,0.16)); transform: translateY(-2px); }
+    .gr-start-card:active { transform: scale(0.98); }
+    .gr-modal {
+      position: fixed; inset: 0; z-index: 600;
+      background: linear-gradient(160deg, #06001c 0%, #0d0225 100%);
+      display: flex; flex-direction: column;
+      opacity: 0; pointer-events: none; transition: opacity 0.35s ease;
+    }
+    .gr-modal.open { opacity: 1; pointer-events: all; }
+    .gr-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 52px 20px 14px; flex-shrink: 0;
+      max-width: 480px; width: 100%; margin: 0 auto; box-sizing: border-box;
+    }
+    .gr-close-btn {
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(255,255,255,0.06); border: none;
+      color: rgba(255,255,255,0.6); font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .gr-progress { display: flex; gap: 6px; align-items: center; }
+    .gr-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: all 0.3s; }
+    .gr-dot.active { width: 18px; border-radius: 3px; background: rgba(155,93,229,0.9); }
+    .gr-dot.done   { background: rgba(155,93,229,0.4); }
+    .gr-body {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 20px 28px; text-align: center; overflow-y: auto;
+      max-width: 480px; margin: 0 auto; width: 100%; box-sizing: border-box;
+    }
+    .gr-step-title { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .gr-step-sub { font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.6; margin-bottom: 28px; max-width: 300px; }
+    .gr-textarea {
+      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px; padding: 14px 16px; color: #fff; font-size: 15px;
+      font-family: inherit; resize: none; box-sizing: border-box; line-height: 1.6; outline: none;
+    }
+    .gr-textarea:focus { border-color: rgba(155,93,229,0.5); }
+    .gr-textarea::placeholder { color: rgba(255,255,255,0.28); }
+    .gr-irt-text {
+      font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.8; text-align: left;
+      max-height: 200px; overflow-y: auto;
+      background: rgba(124,58,237,0.08); border: 1px solid rgba(155,93,229,0.15);
+      border-radius: 14px; padding: 16px; width: 100%; box-sizing: border-box; margin-bottom: 0;
+    }
+    .gr-irt-text::-webkit-scrollbar { width: 3px; }
+    .gr-irt-text::-webkit-scrollbar-thumb { background: rgba(155,93,229,0.3); border-radius: 3px; }
+    .gr-breathe-ring {
+      width: 160px; height: 160px; border-radius: 50%;
+      border: 2px solid rgba(155,93,229,0.35); flex-shrink: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: transform 4s ease, border-color 1s ease, background 1s ease;
+      background: rgba(124,58,237,0.05);
+    }
+    .gr-breathe-ring.inhale { transform: scale(1.25); border-color: rgba(155,93,229,0.9); background: rgba(124,58,237,0.15); }
+    .gr-breathe-ring.hold   { transform: scale(1.25); border-color: rgba(239,197,89,0.75); background: rgba(239,197,89,0.06); }
+    .gr-breathe-ring.exhale { transform: scale(1);    border-color: rgba(99,198,155,0.7);  background: rgba(99,198,155,0.04); }
+    .gr-breathe-ring.done   { border-color: rgba(99,198,155,0.9); background: rgba(99,198,155,0.07); }
+    .gr-breathe-count { font-size: 36px; font-weight: 700; color: #fff; line-height: 1; }
+    .gr-breathe-label { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 6px; }
+    .gr-cycle-dots { display: flex; gap: 10px; margin-top: 24px; }
+    .gr-cycle-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.12); transition: 0.4s; }
+    .gr-cycle-dot.done { background: rgba(155,93,229,0.8); }
+    .gr-sc-info {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 16px 20px; width: 100%; box-sizing: border-box;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .gr-sc-emoji { font-size: 30px; flex-shrink: 0; }
+    .gr-sc-name { font-size: 15px; font-weight: 600; color: #fff; }
+    .gr-sc-desc { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 3px; }
+    .gr-story-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 16px 18px; width: 100%; box-sizing: border-box; text-align: left;
+    }
+    .gr-story-name { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+    .gr-story-preview { font-size: 12px; color: rgba(255,255,255,0.42); line-height: 1.7; }
+    .gr-story-btns { display: flex; gap: 8px; margin-top: 14px; }
+    .gr-story-btns .btn { flex: 1; }
+    .gr-footer {
+      padding: 16px 24px 40px; flex-shrink: 0;
+      max-width: 480px; margin: 0 auto; width: 100%; box-sizing: border-box;
+      display: flex; gap: 12px;
+    }
+    .gr-footer .btn { flex: 1; }
+
+    /* The modal is always dark — use explicit rgba, never CSS vars */
+    .sp-modal {
+      position: fixed; inset: 0; z-index: 500;
+      background: linear-gradient(160deg, #06001c 0%, #0d0225 100%);
+      display: flex; flex-direction: column;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s ease; overflow: hidden;
+    }
+    .sp-modal.open { opacity: 1; pointer-events: all; }
+
+    .sp-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 52px 20px 14px; flex-shrink: 0;
+      max-width: 500px; width: 100%; margin: 0 auto; box-sizing: border-box;
+    }
+    .sp-back-btn {
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.55); font-size: 20px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, color 0.2s; line-height: 1; padding: 0;
+    }
+    .sp-back-btn:hover { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.85); }
+    .sp-header-title { font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 800; color: rgba(255,255,255,0.92); flex: 1; }
+
+    .sp-scroll { flex: 1; overflow-y: auto; }
+    .sp-scroll::-webkit-scrollbar { width: 3px; }
+    .sp-scroll::-webkit-scrollbar-thumb { background: rgba(155,93,229,0.3); border-radius: 3px; }
+
+    /* constrain content width and centre it */
+    .sp-view { display: none; max-width: 500px; margin: 0 auto; padding: 0 20px 40px; box-sizing: border-box; }
+    .sp-view.active { display: block; }
+
+    .sp-subtitle { font-size: 13px; color: rgba(255,255,255,0.42); margin-bottom: 18px; line-height: 1.5; }
+
+    .sp-opt-btn {
+      width: 100%; text-align: left; box-sizing: border-box;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09); border-radius: 18px;
+      padding: 16px 18px; cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .sp-opt-btn:hover  { background: rgba(255,255,255,0.09); border-color: rgba(155,93,229,0.35); transform: translateY(-2px); }
+    .sp-opt-btn:active { transform: scale(0.98); }
+    .sp-opt-icon  { font-size: 26px; flex-shrink: 0; }
+    .sp-opt-name  { font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800; color: rgba(255,255,255,0.9); margin-bottom: 3px; }
+    .sp-opt-desc  { font-size: 12px; color: rgba(255,255,255,0.42); line-height: 1.45; }
+    .sp-opt-arrow { margin-left: auto; font-size: 18px; color: rgba(255,255,255,0.25); flex-shrink: 0; }
+
+    .sp-dream-item {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; padding: 14px 16px; cursor: pointer;
+      margin-bottom: 10px; transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    }
+    .sp-dream-item:hover  { background: rgba(255,255,255,0.08); border-color: rgba(155,93,229,0.28); transform: translateY(-2px); }
+    .sp-dream-item:active { transform: scale(0.98); }
+    .sp-dream-date    { font-size: 10px; color: rgba(155,93,229,0.85); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
+    .sp-dream-preview { font-size: 13.5px; color: rgba(255,255,255,0.78); line-height: 1.55; }
+
+    .sp-classic-item {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; padding: 14px 16px; cursor: pointer;
+      margin-bottom: 10px; transition: background 0.2s, border-color 0.2s, transform 0.15s;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .sp-classic-item:hover  { background: rgba(255,255,255,0.08); border-color: rgba(155,93,229,0.28); transform: translateY(-2px); }
+    .sp-classic-item:active { transform: scale(0.98); }
+    .sp-classic-emoji { font-size: 24px; flex-shrink: 0; }
+    .sp-classic-name  { font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800; color: rgba(255,255,255,0.88); margin-bottom: 2px; }
+    .sp-classic-desc  { font-size: 12px; color: rgba(255,255,255,0.42); }
+    .sp-classic-arrow { margin-left: auto; font-size: 16px; color: rgba(255,255,255,0.22); flex-shrink: 0; }
+
+    .sp-loading { display: flex; flex-direction: column; align-items: center; padding: 60px 20px; gap: 16px; }
+    .sp-loading-text { font-size: 14px; color: rgba(255,255,255,0.45); text-align: center; line-height: 1.65; white-space: pre-line; }
+
+    .sp-reader-story {
+      font-size: 15px; color: rgba(255,255,255,0.82); line-height: 1.85;
+      padding: 20px 18px; background: rgba(255,255,255,0.04); border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.08); margin: 0 0 16px; max-height: 46vh; overflow-y: auto;
+    }
+    .sp-reader-story::-webkit-scrollbar { width: 3px; }
+    .sp-reader-story::-webkit-scrollbar-thumb { background: rgba(155,93,229,0.35); border-radius: 3px; }
+
+    .sp-player {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(124,58,237,0.12); border: 1px solid rgba(155,93,229,0.22);
+      border-radius: 40px; padding: 10px 16px 10px 10px;
+    }
+    .sp-play-btn {
+      width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer; flex-shrink: 0;
+      background: linear-gradient(135deg, #7c3aed, #9b5de5);
+      color: #fff; font-size: 16px; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 3px 12px rgba(124,58,237,0.45); transition: transform 0.15s;
+    }
+    .sp-play-btn:active   { transform: scale(0.92); }
+    .sp-play-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .sp-player-label { flex: 1; font-size: 13px; color: rgba(255,255,255,0.45); }
+    .sp-bars { display: flex; align-items: center; gap: 2px; height: 18px; }
+    .sp-bar  { width: 3px; border-radius: 2px; background: rgba(155,93,229,0.75); opacity: 0.35; }
+    .sp-bars.playing .sp-bar { opacity: 0.85; }
+    .sp-bars.playing .sp-bar:nth-child(1) { animation: sbar 1.1s ease-in-out infinite; }
+    .sp-bars.playing .sp-bar:nth-child(2) { animation: sbar 1.1s ease-in-out 0.2s infinite; }
+    .sp-bars.playing .sp-bar:nth-child(3) { animation: sbar 1.1s ease-in-out 0.4s infinite; }
+    .sp-bars.playing .sp-bar:nth-child(4) { animation: sbar 1.1s ease-in-out 0.6s infinite; }
+
+    /* ── STRETCH RING ── */
+    .stretch-ring { position: relative; width: 104px; height: 104px; margin: 22px auto 16px; }
+    .stretch-ring svg { transform: rotate(-90deg); }
+    .stretch-ring-bg   { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 5; }
+    .stretch-ring-fill { fill: none; stroke: url(#ring-grad); stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+    .stretch-ring-num  { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Nunito', sans-serif; font-size: 28px; font-weight: 300; color: var(--text); }
+  </style>
+</head>
+<body>
+
+  <!-- ──────────── BREATHING MODAL ──────────── -->
+  <div class="activity-modal" id="modal-breathing">
+    <button class="modal-close" onclick="window.stopActivity('breathing')">×</button>
+    <div class="modal-tag">4 · 7 · 8 Breathing</div>
+    <div class="breath-circle" id="breath-circle">
+      <span class="breath-count-inner" id="breath-count"></span>
+    </div>
+    <div class="breath-phase" id="breath-label">Get ready</div>
+    <div class="breath-hint"  id="breath-sub">4 cycles · ~2 min</div>
+    <div class="breath-dots">
+      <div class="breath-dot" id="bdot-0"></div>
+      <div class="breath-dot" id="bdot-1"></div>
+      <div class="breath-dot" id="bdot-2"></div>
+      <div class="breath-dot" id="bdot-3"></div>
+    </div>
+  </div>
+
+  <!-- ──────────── BODY SCAN MODAL ──────────── -->
+  <div class="activity-modal" id="modal-bodyscan">
+    <button class="modal-close" onclick="window.stopActivity('bodyscan')">×</button>
+    <div class="modal-tag">Body Scan</div>
+    <span class="modal-icon">🌊</span>
+    <div class="modal-main" id="bs-part">Feet</div>
+    <div class="modal-body-text" id="bs-desc">Curl your toes tight, then let them go.</div>
+    <div class="bs-bar-wrap"><div class="bs-bar-fill" id="bs-fill" style="width:100%;"></div></div>
+    <div class="modal-step" id="bs-step">1 of 10</div>
+  </div>
+
+  <!-- ──────────── JOURNAL MODAL ──────────── -->
+  <div class="activity-modal" id="modal-journal">
+    <button class="modal-close" onclick="window.stopActivity('journal')">×</button>
+    <span class="modal-icon">📓</span>
+    <div class="modal-tag">Dream Journal</div>
+    <div class="modal-prompt" id="journal-q">What emotion from your dream is still with you?</div>
+    <div class="modal-hint"   id="journal-hint">Sit with it — no need to write</div>
+    <div class="modal-dots"   id="journal-dots"></div>
+    <button class="modal-btn" id="journal-btn" onclick="window.journalNext()">Next →</button>
+  </div>
+
+  <!-- ──────────── VISUALIZATION MODAL ──────────── -->
+  <div class="activity-modal" id="modal-viz" onclick="window.vizNext()">
+    <button class="modal-close" onclick="event.stopPropagation(); window.stopActivity('viz')">×</button>
+    <div class="modal-tag">Visualization</div>
+    <div class="viz-text" id="viz-text">Close your eyes.</div>
+    <div class="modal-dots" id="viz-dots"></div>
+    <div class="modal-step" style="margin-top:18px;">Tap anywhere to continue</div>
+  </div>
+
+  <!-- ──────────── GRATITUDE MODAL ──────────── -->
+  <div class="activity-modal" id="modal-gratitude">
+    <button class="modal-close" onclick="window.stopActivity('gratitude')">×</button>
+    <span class="modal-icon">🙏</span>
+    <div class="modal-tag">Gratitude</div>
+    <div class="modal-prompt" id="grat-q">Name one small thing that felt good today.</div>
+    <div class="modal-hint"   id="grat-hint">A warmth, a moment, a taste</div>
+    <div class="modal-dots"   id="grat-dots"></div>
+    <button class="modal-btn" id="grat-btn" onclick="window.gratNext()">Next →</button>
+  </div>
+
+  <!-- ──────────── STORY MODAL ──────────── -->
+  <div class="activity-modal" id="modal-story">
+    <button class="modal-close" onclick="window.stopActivity('story')">×</button>
+    <div class="modal-tag">AI Bedtime Story</div>
+    <div id="story-loading">
+      <span class="modal-icon">📖</span>
+      <div class="modal-main">Writing your story…</div>
+      <div class="modal-body-text">Drawing from your last dream</div>
+      <div style="margin-top:24px;"><div class="spinner"></div></div>
+    </div>
+    <div id="story-content" style="display:none; width:100%; max-width:340px;">
+      <div class="story-text" id="story-text"></div>
+      <div class="story-player">
+        <button class="story-play-btn" id="story-play-btn" onclick="window.toggleStoryAudio()">▶</button>
+        <span class="story-player-label" id="story-player-label">Tap to listen</span>
+        <div class="story-bars" id="story-bars">
+          <div class="story-bar" style="height:8px;"></div>
+          <div class="story-bar" style="height:14px;"></div>
+          <div class="story-bar" style="height:6px;"></div>
+          <div class="story-bar" style="height:11px;"></div>
+        </div>
+      </div>
+      <button class="modal-btn-sm" style="margin-top:14px;" onclick="window.stopActivity('story')">Done</button>
+    </div>
+  </div>
+
+  <!-- ──────────── STRETCHING MODAL ──────────── -->
+  <div class="activity-modal" id="modal-stretching">
+    <button class="modal-close" onclick="window.stopActivity('stretching')">×</button>
+    <div class="modal-tag">Gentle Stretch</div>
+    <div class="stretch-ring">
+      <svg width="104" height="104" viewBox="0 0 104 104">
+        <defs>
+          <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stop-color="#7c3aed"/>
+            <stop offset="100%" stop-color="#9b5de5"/>
+          </linearGradient>
+        </defs>
+        <circle class="stretch-ring-bg"   cx="52" cy="52" r="46"/>
+        <circle class="stretch-ring-fill" id="stretch-ring-fill" cx="52" cy="52" r="46"
+                stroke-dasharray="289" stroke-dashoffset="0"/>
+      </svg>
+      <div class="stretch-ring-num" id="stretch-count">20</div>
+    </div>
+    <div class="modal-main"      id="stretch-name">Neck Roll</div>
+    <div class="modal-body-text" id="stretch-desc">Drop your right ear to your shoulder, hold, then switch.</div>
+    <div class="modal-step"      id="stretch-step">1 of 5</div>
+    <button class="modal-btn-sm" id="stretch-skip" onclick="window.stretchSkip()">Skip →</button>
+  </div>
+
+
+  <!-- ──────────── STORY PICKER MODAL ──────────── -->
+  <div class="sp-modal" id="modal-story-picker">
+    <div class="sp-header">
+      <button class="sp-back-btn" id="sp-back-btn" onclick="spGoBack()" style="visibility:hidden;">‹</button>
+      <div class="sp-header-title" id="sp-header-title">Bedtime Story</div>
+      <button class="modal-close" style="position:static;margin-left:auto;" onclick="closeStoryPicker()">×</button>
+    </div>
+
+    <div class="sp-scroll" id="sp-scroll">
+
+      <!-- options -->
+      <div class="sp-view active" id="sp-view-options">
+        <div class="sp-subtitle">Choose how your story is made</div>
+        <button class="sp-opt-btn" onclick="spShowDreams()">
+          <span class="sp-opt-icon">🌙</span>
+          <div style="flex:1;">
+            <div class="sp-opt-name">From a dream</div>
+            <div class="sp-opt-desc">Pick one of your logged dreams to transform into a bedtime story</div>
+          </div>
+          <span class="sp-opt-arrow">›</span>
+        </button>
+        <button class="sp-opt-btn" onclick="spStartPatterns(event)">
+          <span class="sp-opt-icon">✦</span>
+          <div style="flex:1;">
+            <div class="sp-opt-name">From your patterns</div>
+            <div class="sp-opt-desc" id="sp-patterns-desc">AI weaves a story from the recurring themes and emotions in your dreams</div>
+          </div>
+          <span class="sp-opt-arrow">›</span>
+        </button>
+        <button class="sp-opt-btn" onclick="spShowClassics()">
+          <span class="sp-opt-icon">📚</span>
+          <div style="flex:1;">
+            <div class="sp-opt-name">Classic stories</div>
+            <div class="sp-opt-desc">A curated library of gentle, sleep-ready bedtime stories</div>
+          </div>
+          <span class="sp-opt-arrow">›</span>
+        </button>
+      </div>
+
+      <!-- pick a dream -->
+      <div class="sp-view" id="sp-view-dreams">
+        <div class="sp-subtitle">Which dream should inspire your story?</div>
+        <div id="sp-dream-list"></div>
+      </div>
+
+      <!-- classics list -->
+      <div class="sp-view" id="sp-view-classics">
+        <div class="sp-subtitle">Timeless tales written for drifting off</div>
+        <div id="sp-classics-list"></div>
+      </div>
+
+      <!-- loading -->
+      <div class="sp-view" id="sp-view-loading">
+        <div class="sp-loading">
+          <span style="font-size:48px;">📖</span>
+          <div class="spinner"></div>
+          <div class="sp-loading-text" id="sp-loading-text">Writing your story…</div>
+        </div>
+      </div>
+
+      <!-- reader -->
+      <div class="sp-view" id="sp-view-reader">
+        <div class="sp-reader-story" id="sp-reader-text"></div>
+        <div class="sp-player">
+          <button class="sp-play-btn" id="sp-play-btn" onclick="window.sp_toggleAudio()">▶</button>
+          <span class="sp-player-label" id="sp-player-label">Tap to listen</span>
+          <div class="sp-bars" id="sp-bars">
+            <div class="sp-bar" style="height:8px;"></div>
+            <div class="sp-bar" style="height:14px;"></div>
+            <div class="sp-bar" style="height:6px;"></div>
+            <div class="sp-bar" style="height:11px;"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── GUIDED ROUTINE MODAL ── -->
+  <div class="gr-modal" id="gr-modal">
+    <div class="gr-header">
+      <button class="gr-close-btn" onclick="closeGuidedRoutine()">✕</button>
+      <div class="gr-progress" id="gr-progress"></div>
+      <div style="width:36px;"></div>
+    </div>
+    <div class="gr-body" id="gr-body"></div>
+    <div class="gr-footer">
+      <button class="btn btn-ghost" id="gr-skip-btn" onclick="grSkip()">Skip</button>
+      <button class="btn btn-primary" id="gr-next-btn" onclick="grNext()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- ── REHEARSAL TIMER MODAL ── -->
+  <div class="rt-modal" id="rt-modal">
+    <div class="rt-header">
+      <div class="rt-title">🌙 Rehearsal</div>
+      <button class="rt-close" onclick="closeRehearsal()">✕</button>
+    </div>
+    <div style="max-width:480px;width:100%;margin:0 auto;padding:0 24px 16px;box-sizing:border-box;text-align:center;flex-shrink:0;">
+      <div class="rt-timer-ring" id="rt-ring">
+        <div class="rt-time" id="rt-time">5:00</div>
+        <div class="rt-time-label" id="rt-time-label">ready</div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button class="btn btn-ghost" style="min-width:100px;" id="rt-start-btn" onclick="rtToggleTimer()">▶ Start</button>
+        <button class="btn btn-ghost" style="min-width:100px;" id="rt-listen-btn" onclick="rtToggleListen()">🎧 Listen</button>
+      </div>
+    </div>
+    <div class="rt-text-scroll" id="rt-text-scroll">
+      <div class="rt-dream-text" id="rt-dream-text"></div>
+    </div>
+    <div class="rt-footer">
+      <button class="btn btn-ghost" onclick="closeRehearsal()">End session</button>
+    </div>
+  </div>
+
+  <!-- ──────────── APP SHELL ──────────── -->
+  <div class="app-frame">
+    <div class="page-header">🌬️ Wind Down</div>
+
+    <div class="main-content page-content">
+
+      <!-- ── START ROUTINE ── -->
+      <div class="gr-start-card" onclick="openGuidedRoutine()">
+        <div style="font-size:28px;flex-shrink:0;">✨</div>
+        <div style="flex:1;">
+          <div class="routine-name">Start tonight's routine</div>
+          <div class="routine-note">Guided · 5–10 min · Personalized to your dreams</div>
+        </div>
+        <div class="routine-arrow">›</div>
+      </div>
+
+      <!-- ── SOUNDSCAPE SECTION ── -->
+      <div class="section-label">Soundscape</div>
+
+      <div id="sc-loading" class="sc-loading">
+        <div class="spinner"></div>
+        Curating tonight's soundscapes…
+      </div>
+      <div id="sc-grid" class="sc-grid" style="display:none;"></div>
+
+      <div id="sc-custom" style="display:none;">
+        <div class="sc-divider">or describe your own</div>
+        <div class="sc-input-row">
+          <input class="sc-input" id="sc-input" type="text"
+            placeholder="a warm cabin with rain outside…"
+            onkeydown="if(event.key==='Enter') generateCustomSoundscape()">
+          <button class="sc-gen-btn" id="sc-gen-btn" onclick="generateCustomSoundscape()">→</button>
+        </div>
+      </div>
+
+      <div id="player-wrap"></div>
+
+      <!-- ── TONIGHT'S ROUTINE ── -->
+      <div class="section-label" style="margin-top:24px;">Tonight's routine</div>
+      <div id="routine-wrap">
+        <div class="sc-loading">
+          <div class="spinner"></div>
+          Personalising your routine…
+        </div>
+      </div>
+
+      <!-- ── BEDTIME STORY ENTRY ── -->
+      <div class="sp-entry-card" onclick="openStoryPicker()">
+        <div class="routine-icon">📚</div>
+        <div style="flex:1;">
+          <div class="routine-name">Fall asleep to a story</div>
+          <div class="routine-note">Dream-inspired · Pattern-based · Classics</div>
+        </div>
+        <div class="routine-arrow">›</div>
+      </div>
+
+      <!-- ── IRT REHEARSAL ── -->
+      <div id="irt-rehearse-wrap"></div>
+
+    </div>
+
+    <nav class="bottom-nav">
+      <div class="nav-group">
+        <a class="nav-link" href="../index.html">Home</a>
+        <a class="nav-link" href="dreams.html">Dreams</a>
+      </div>
+      <a class="nav-plus" href="journal.html">+</a>
+      <div class="nav-group">
+        <a class="nav-link" href="lucid.html">Lucid</a>
+        <a class="nav-link active" href="winddown.html">Wind Down</a>
+      </div>
+    </nav>
+  </div>
+
+
+  <script src="../js/app.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/soundscapes.js"></script>
+
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    import { getDreams }   from '../js/firebase.js';
+
+    // ── STATE ────────────────────────────────────────────────────
+    let latestDreamText = '';
+    let latestEmotions  = [];
+    let latestThemes    = [];
+    let allDreams    = [];
+    let currentCard  = null;
+    let isPlaying    = false;
+    let currentAudio = null;
+
+    // ── MODAL HELPERS ────────────────────────────────────────────
+    function openModal(id)  { document.getElementById(`modal-${id}`).classList.add('open'); }
+    function closeModal(id) { document.getElementById(`modal-${id}`).classList.remove('open'); }
+
+    // ── BREATHING ────────────────────────────────────────────────
+    const BREATH_PHASES = [
+      { label: 'Inhale',  secs: 4, cls: 'inhale' },
+      { label: 'Hold',    secs: 7, cls: 'inhale'  },
+      { label: 'Exhale',  secs: 8, cls: 'exhale'  },
+    ];
+    let breathActive = false;
+    let breathTimer  = null;
+
+    function startBreathing() {
+      breathActive = true;
+      openModal('breathing');
+      const circle = document.getElementById('breath-circle');
+      const label  = document.getElementById('breath-label');
+      const count  = document.getElementById('breath-count');
+      const sub    = document.getElementById('breath-sub');
+      circle.className = 'breath-circle';
+      label.textContent = 'Get ready';
+      count.textContent = '';
+      for (let i = 0; i < 4; i++) {
+        const d = document.getElementById(`bdot-${i}`);
+        if (d) d.className = 'breath-dot';
+      }
+
+      let cycle = 0, phaseIdx = 0, countdown = 0;
+
+      function nextPhase() {
+        if (!breathActive) return;
+        if (cycle >= 4) { stopBreathing(); return; }
+        const phase = BREATH_PHASES[phaseIdx];
+        label.textContent  = phase.label;
+        circle.className   = 'breath-circle ' + phase.cls;
+        countdown          = phase.secs;
+        count.textContent  = countdown;
+        sub.textContent    = `Cycle ${cycle + 1} of 4`;
+        const dot = document.getElementById(`bdot-${cycle}`);
+        if (dot) dot.className = 'breath-dot active';
+
+        breathTimer = setInterval(() => {
+          if (!breathActive) { clearInterval(breathTimer); return; }
+          countdown--;
+          count.textContent = countdown;
+          if (countdown <= 0) {
+            clearInterval(breathTimer);
+            phaseIdx++;
+            if (phaseIdx >= BREATH_PHASES.length) {
+              phaseIdx = 0; cycle++;
+              const prev = document.getElementById(`bdot-${cycle - 1}`);
+              if (prev) prev.className = 'breath-dot done';
+            }
+            setTimeout(nextPhase, 300);
+          }
+        }, 1000);
+      }
+      setTimeout(nextPhase, 800);
+    }
+
+    function stopBreathing() {
+      breathActive = false;
+      clearInterval(breathTimer);
+      closeModal('breathing');
+      document.getElementById('breath-label').textContent = 'Get ready';
+      document.getElementById('breath-count').textContent = '';
+      document.getElementById('breath-circle').className  = 'breath-circle';
+    }
+
+    // ── BODY SCAN ────────────────────────────────────────────────
+    const BODY_PARTS = [
+      { name: 'Feet',           desc: 'Curl your toes tight, then let them go completely.' },
+      { name: 'Calves',         desc: 'Flex gently, breathe out, feel the tension drain.' },
+      { name: 'Knees & Thighs', desc: 'Squeeze lightly, then release. Notice the warmth.' },
+      { name: 'Hips',           desc: 'Sink heavier into the surface beneath you.' },
+      { name: 'Abdomen',        desc: 'Let your belly soften with every breath out.' },
+      { name: 'Chest',          desc: 'Feel your ribcage rise, then gently settle.' },
+      { name: 'Hands & Arms',   desc: 'Clench your fists, hold, then release fully.' },
+      { name: 'Shoulders',      desc: 'Roll them back, breathe in deep, melt on the exhale.' },
+      { name: 'Neck',           desc: 'Release any holding. Let your head feel heavy.' },
+      { name: 'Face',           desc: 'Unclench your jaw. Soften your eyes and brow.' },
+    ];
+    const BS_SECS = 6;
+    let bsActive = false;
+    let bsTimer  = null;
+
+    function startBodyScan() {
+      bsActive = true;
+      openModal('bodyscan');
+      let idx = 0, elapsed = 0;
+
+      function showPart() {
+        if (!bsActive) return;
+        if (idx >= BODY_PARTS.length) { stopBodyScan(); return; }
+        const p = BODY_PARTS[idx];
+        document.getElementById('bs-part').textContent = p.name;
+        document.getElementById('bs-desc').textContent = p.desc;
+        document.getElementById('bs-step').textContent = `${idx + 1} of ${BODY_PARTS.length}`;
+        document.getElementById('bs-fill').style.width = '100%';
+        elapsed = 0;
+
+        bsTimer = setInterval(() => {
+          if (!bsActive) { clearInterval(bsTimer); return; }
+          elapsed++;
+          const pct = Math.max(0, 100 - (elapsed / BS_SECS) * 100);
+          document.getElementById('bs-fill').style.width = pct + '%';
+          if (elapsed >= BS_SECS) {
+            clearInterval(bsTimer);
+            idx++;
+            setTimeout(showPart, 400);
+          }
+        }, 1000);
+      }
+      showPart();
+    }
+
+    function stopBodyScan() {
+      bsActive = false;
+      clearInterval(bsTimer);
+      closeModal('bodyscan');
+    }
+
+    // ── JOURNAL ──────────────────────────────────────────────────
+    const JOURNAL_PROMPTS = [
+      { q: 'What emotion from your dream is still with you right now?',    hint: 'Sit with it — no need to write' },
+      { q: 'Was there a moment that felt meaningful, even if strange?',    hint: 'Let the image come back' },
+      { q: 'What would you tell the version of you inside that dream?',    hint: 'Be kind' },
+    ];
+    let journalIdx = 0;
+
+    function startJournal() {
+      journalIdx = 0;
+      openModal('journal');
+      renderJournalStep();
+    }
+
+    function renderJournalStep() {
+      const p = JOURNAL_PROMPTS[journalIdx];
+      document.getElementById('journal-q').textContent    = p.q;
+      document.getElementById('journal-hint').textContent = p.hint;
+      document.getElementById('journal-btn').textContent  = journalIdx < JOURNAL_PROMPTS.length - 1 ? 'Next →' : 'Done ✓';
+      const dots = document.getElementById('journal-dots');
+      dots.innerHTML = JOURNAL_PROMPTS.map((_, i) => `<div class="modal-dot${i === journalIdx ? ' active' : (i < journalIdx ? ' done' : '')}"></div>`).join('');
+    }
+
+    window.journalNext = function() {
+      if (journalIdx < JOURNAL_PROMPTS.length - 1) {
+        journalIdx++;
+        renderJournalStep();
+      } else {
+        closeModal('journal');
+      }
+    };
+
+    // ── VISUALIZATION ────────────────────────────────────────────
+    const VIZ_STEPS = [
+      'Close your eyes. Take one slow breath in through your nose…',
+      'Imagine a place where you feel completely at ease. Real or imagined.',
+      'Notice the light there — warm and soft, like late afternoon.',
+      'Feel the air. Is there a gentle breeze? The sound of water nearby?',
+      'Let yourself sink deeper into this place with every exhale.',
+      'You carry this feeling of safety with you into sleep.',
+    ];
+    let vizIdx    = 0;
+    let vizTimer  = null;
+
+    function startViz() {
+      vizIdx = 0;
+      openModal('viz');
+      renderVizStep();
+      vizTimer = setInterval(() => { if (vizIdx < VIZ_STEPS.length - 1) { vizIdx++; renderVizStep(); } else clearInterval(vizTimer); }, 9000);
+    }
+
+    function renderVizStep() {
+      const el = document.getElementById('viz-text');
+      el.style.opacity = '0';
+      setTimeout(() => { el.textContent = VIZ_STEPS[vizIdx]; el.style.opacity = '1'; }, 300);
+      const dots = document.getElementById('viz-dots');
+      dots.innerHTML = VIZ_STEPS.map((_, i) => `<div class="modal-dot${i === vizIdx ? ' active' : (i < vizIdx ? ' done' : '')}"></div>`).join('');
+    }
+
+    window.vizNext = function() {
+      clearInterval(vizTimer);
+      if (vizIdx < VIZ_STEPS.length - 1) {
+        vizIdx++;
+        renderVizStep();
+        vizTimer = setInterval(() => { if (vizIdx < VIZ_STEPS.length - 1) { vizIdx++; renderVizStep(); } else clearInterval(vizTimer); }, 9000);
+      } else {
+        closeModal('viz');
+      }
+    };
+
+    function stopViz() { clearInterval(vizTimer); closeModal('viz'); }
+
+    // ── GRATITUDE ────────────────────────────────────────────────
+    const GRAT_PROMPTS = [
+      { q: 'Name one small thing that felt good today.',      hint: 'A warmth, a moment, a taste' },
+      { q: 'Who made you feel seen or safe recently?',        hint: 'Even a small kindness counts' },
+      { q: 'What does your body need tonight to feel held?',  hint: 'Rest, warmth, quiet…' },
+    ];
+    let gratIdx = 0;
+
+    function startGratitude() {
+      gratIdx = 0;
+      openModal('gratitude');
+      renderGratStep();
+    }
+
+    function renderGratStep() {
+      const p = GRAT_PROMPTS[gratIdx];
+      document.getElementById('grat-q').textContent    = p.q;
+      document.getElementById('grat-hint').textContent = p.hint;
+      document.getElementById('grat-btn').textContent  = gratIdx < GRAT_PROMPTS.length - 1 ? 'Next →' : 'Done ✓';
+      const dots = document.getElementById('grat-dots');
+      dots.innerHTML = GRAT_PROMPTS.map((_, i) => `<div class="modal-dot${i === gratIdx ? ' active' : (i < gratIdx ? ' done' : '')}"></div>`).join('');
+    }
+
+    window.gratNext = function() {
+      if (gratIdx < GRAT_PROMPTS.length - 1) {
+        gratIdx++;
+        renderGratStep();
+      } else {
+        closeModal('gratitude');
+      }
+    };
+
+    // ── STORY ────────────────────────────────────────────────────
+    let storyAborted  = false;
+    let storyAudio    = null;
+    let storyPlaying  = false;
+    let storyText_    = '';
+    let storyEmotions_ = [];
+    let storyThemes_   = [];
+
+    function _storySetUI(icon, label, playing) {
+      const btn  = document.getElementById('story-play-btn');
+      const lbl  = document.getElementById('story-player-label');
+      const bars = document.getElementById('story-bars');
+      if (btn)  { btn.textContent = icon; btn.disabled = false; }
+      if (lbl)  lbl.textContent = label;
+      if (bars) bars.classList.toggle('playing', playing);
+      storyPlaying = playing;
+    }
+
+    async function startStory() {
+      storyAborted  = false;
+      storyPlaying  = false;
+      storyEmotions_ = [...latestEmotions];
+      storyThemes_   = [...latestThemes];
+      if (storyAudio) { storyAudio.pause(); storyAudio.src = ''; storyAudio = null; }
+      window.speechSynthesis?.cancel();
+      document.getElementById('story-loading').style.display = 'block';
+      document.getElementById('story-content').style.display = 'none';
+      document.getElementById('story-text').textContent = '';
+      openModal('story');
+      try {
+        const dreamText = latestDreamText || 'a quiet, peaceful night';
+        const result = await generateBedtimeStory(dreamText);
+        if (storyAborted) return;
+        storyText_ = (result.audio_url || '').replace('STORY_TEXT:', '');
+        document.getElementById('story-loading').style.display = 'none';
+        document.getElementById('story-content').style.display = 'block';
+        document.getElementById('story-text').textContent = storyText_;
+        _storySetUI('▶', 'Tap to listen', false);
+      } catch (e) {
+        if (!storyAborted) {
+          document.getElementById('story-loading').innerHTML = `<span class="modal-icon">😶</span><div class="modal-main" style="font-size:17px;">Couldn't load story</div><button class="modal-btn-sm" onclick="window.stopActivity('story')">Close</button>`;
+        }
+      }
+    }
+
+    window.toggleStoryAudio = async function() {
+      // Pause if playing
+      if (storyPlaying) {
+        storyAudio ? storyAudio.pause() : window.speechSynthesis?.pause();
+        _storySetUI('▶', 'Paused', false);
+        return;
+      }
+      // Resume if paused mid-way
+      if (storyAudio && storyAudio.paused && storyAudio.currentTime > 0) {
+        storyAudio.play();
+        _storySetUI('⏸', 'Now reading…', true);
+        return;
+      }
+      if (window.speechSynthesis?.paused) {
+        window.speechSynthesis.resume();
+        _storySetUI('⏸', 'Now reading…', true);
+        return;
+      }
+      // Start fresh — call backend TTS
+      const btn = document.getElementById('story-play-btn');
+      btn.disabled = true;
+      _storySetUI('…', 'Preparing voice…', false);
+      try {
+        const url = await readStoryTTS(storyText_, storyEmotions_, storyThemes_);
+        if (storyAborted) return;
+        storyAudio = new Audio(url);
+        storyAudio.onplay  = () => _storySetUI('⏸', 'Now reading…', true);
+        storyAudio.onpause = () => _storySetUI('▶', 'Paused', false);
+        storyAudio.onended = () => { _storySetUI('▶', 'Listen again', false); storyAudio = null; };
+        storyAudio.play();
+      } catch (e) {
+        console.error('TTS error:', e);
+        _storySetUI('▶', `Voice error: ${e.message}`, false);
+        btn.disabled = false;
+      }
+    };
+
+    async function _speakStory(text) {
+      if (!window.speechSynthesis) { _storySetUI('▶', 'Audio unavailable', false); return; }
+      window.speechSynthesis.cancel();
+      // getVoices can be async on first call
+      let voices = window.speechSynthesis.getVoices();
+      if (!voices.length) {
+        await new Promise(r => window.speechSynthesis.addEventListener('voiceschanged', r, { once: true }));
+        voices = window.speechSynthesis.getVoices();
+      }
+      const calm = voices.find(v => ['Samantha','Karen','Moira','Serena'].some(n => v.name.includes(n)))
+        || voices.find(v => v.lang.startsWith('en') && !v.name.toLowerCase().includes('google'))
+        || voices.find(v => v.lang.startsWith('en'));
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate  = 0.82;
+      utterance.pitch = 0.95;
+      if (calm) utterance.voice = calm;
+      utterance.onstart  = () => _storySetUI('⏸', 'Now reading…', true);
+      utterance.onend    = () => _storySetUI('▶', 'Listen again', false);
+      utterance.onpause  = () => _storySetUI('▶', 'Paused', false);
+      utterance.onerror  = () => _storySetUI('▶', 'Tap to retry', false);
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function stopStory() {
+      storyAborted = true;
+      if (storyAudio) { storyAudio.pause(); storyAudio.src = ''; storyAudio = null; }
+      window.speechSynthesis?.cancel();
+      storyPlaying = false;
+      closeModal('story');
+    }
+
+    // ── STRETCHING ───────────────────────────────────────────────
+    const STRETCHES = [
+      { name: 'Neck Roll',          desc: 'Drop your right ear to your shoulder, hold, then slowly switch sides.',          secs: 20 },
+      { name: 'Shoulder Release',   desc: 'Interlace your fingers, extend arms forward, round your upper back. Breathe.',   secs: 20 },
+      { name: 'Seated Forward Fold',desc: 'Sit at the edge of your bed, hinge forward from your hips. Let everything hang.', secs: 25 },
+      { name: 'Supine Twist',       desc: 'Lie flat. Draw your right knee to your chest, guide it across your body.',        secs: 25 },
+      { name: "Child's Pose",       desc: 'Kneel and sit back on your heels, stretch arms forward, rest your forehead.',     secs: 30 },
+    ];
+    const RING_CIRCUMF = 289;
+    let stretchActive = false;
+    let stretchTimer  = null;
+    let stretchIdx    = 0;
+
+    function startStretching() {
+      stretchActive = true;
+      stretchIdx    = 0;
+      openModal('stretching');
+      showStretch();
+    }
+
+    function showStretch() {
+      if (!stretchActive) return;
+      if (stretchIdx >= STRETCHES.length) { stopStretching(); return; }
+      const s = STRETCHES[stretchIdx];
+      document.getElementById('stretch-name').textContent = s.name;
+      document.getElementById('stretch-desc').textContent = s.desc;
+      document.getElementById('stretch-step').textContent = `${stretchIdx + 1} of ${STRETCHES.length}`;
+      document.getElementById('stretch-skip').textContent = stretchIdx < STRETCHES.length - 1 ? 'Skip →' : 'Done ✓';
+
+      let elapsed = 0;
+      document.getElementById('stretch-count').textContent = s.secs;
+      document.getElementById('stretch-ring-fill').style.strokeDashoffset = '0';
+
+      stretchTimer = setInterval(() => {
+        if (!stretchActive) { clearInterval(stretchTimer); return; }
+        elapsed++;
+        const remaining = s.secs - elapsed;
+        document.getElementById('stretch-count').textContent = remaining;
+        const offset = RING_CIRCUMF * (elapsed / s.secs);
+        document.getElementById('stretch-ring-fill').style.strokeDashoffset = offset;
+        if (elapsed >= s.secs) {
+          clearInterval(stretchTimer);
+          stretchIdx++;
+          setTimeout(showStretch, 500);
+        }
+      }, 1000);
+    }
+
+    window.stretchSkip = function() {
+      clearInterval(stretchTimer);
+      if (stretchIdx < STRETCHES.length - 1) { stretchIdx++; showStretch(); }
+      else stopStretching();
+    };
+
+    function stopStretching() {
+      stretchActive = false;
+      clearInterval(stretchTimer);
+      closeModal('stretching');
+    }
+
+    // ── STOP DISPATCHER ──────────────────────────────────────────
+    window.stopActivity = function(id) {
+      if (id === 'breathing')  return stopBreathing();
+      if (id === 'bodyscan')   return stopBodyScan();
+      if (id === 'journal')    return closeModal('journal');
+      if (id === 'viz')        return stopViz();
+      if (id === 'gratitude')  return closeModal('gratitude');
+      if (id === 'story')      return stopStory();
+      if (id === 'stretching') return stopStretching();
+      closeModal(id);
+    };
+
+    // ── ROUTINE META ─────────────────────────────────────────────
+    const ROUTINE_META = {
+      breathing:     { icon: '🫁', name: 'Breathing Exercise',  open: startBreathing  },
+      body_scan:     { icon: '🌊', name: 'Body Scan',           open: startBodyScan   },
+      journaling:    { icon: '📓', name: 'Dream Journal',       open: startJournal    },
+      visualization: { icon: '🌙', name: 'Visualization',       open: startViz        },
+      gratitude:     { icon: '🙏', name: 'Gratitude Practice',  open: startGratitude  },
+      story:         { icon: '📖', name: 'AI Bedtime Story',    open: startStory      },
+      stretching:    { icon: '🧘', name: 'Gentle Stretch',      open: startStretching },
+    };
+
+    // ── ROUTINE RENDER ───────────────────────────────────────────
+    function showRoutineToast(name) {
+      let t = document.getElementById('routine-toast');
+      if (!t) { t = document.createElement('div'); t.id = 'routine-toast'; document.getElementById('routine-wrap').after(t); }
+      t.textContent = `${name} coming soon ✦`;
+      t.style.opacity = '1';
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => { t.style.opacity = '0'; }, 1800);
+    }
+
+    function renderRoutine(intention, items) {
+      const wrap = document.getElementById('routine-wrap');
+      const intentHtml = intention ? `
+        <div class="intention-card">
+          <div class="intention-label">Tonight's intention</div>
+          <div class="intention-text">${intention}</div>
+        </div>` : '';
+
+      const cardsHtml = items.map((item, i) => {
+        const meta = ROUTINE_META[item.type] || { icon: '✨', name: item.type };
+        return `
+          <div class="routine-card" data-ri="${i}">
+            <div class="routine-icon">${meta.icon}</div>
+            <div style="flex:1;">
+              <div class="routine-name">${meta.name}</div>
+              ${item.note ? `<div class="routine-note">${item.note}</div>` : ''}
+            </div>
+            <div class="routine-arrow">›</div>
+          </div>`;
+      }).join('');
+
+      wrap.innerHTML = intentHtml + cardsHtml;
+
+      wrap.querySelectorAll('.routine-card[data-ri]').forEach(el => {
+        const item = items[parseInt(el.dataset.ri)];
+        const meta = ROUTINE_META[item.type];
+        el.addEventListener('click', () => {
+          if (meta?.open) meta.open();
+          else showRoutineToast(meta?.name || item.type);
+        });
+      });
+    }
+
+    function renderFallbackRoutine() {
+      renderRoutine('', [
+        { type: 'breathing',  note: 'Ground yourself before sleep' },
+        { type: 'journaling', note: 'Write down what\'s on your mind' },
+        { type: 'story',      note: 'Let a story carry you to sleep' },
+      ]);
+    }
+
+    // ── SOUNDSCAPE PLAYER ────────────────────────────────────────
+    function showPlayer(card, playing) {
+      document.getElementById('player-wrap').innerHTML = `
+        <div class="soundscape-player" style="margin-top:14px;">
+          <button class="soundscape-play-btn" id="play-btn" onclick="togglePlay()">
+            ${playing ? '⏸' : '▶'}
+          </button>
+          <div class="soundscape-info">
+            <div class="soundscape-title">${card.emoji} ${card.name}</div>
+            <div class="soundscape-sub" id="player-sub">${playing ? 'Now playing · Looping' : 'Paused'}</div>
+          </div>
+          <div class="soundscape-bars ${playing ? 'playing' : ''}" id="soundscape-bars">
+            <div class="soundscape-bar" style="height:10px;"></div>
+            <div class="soundscape-bar" style="height:16px;"></div>
+            <div class="soundscape-bar" style="height:8px;"></div>
+            <div class="soundscape-bar" style="height:14px;"></div>
+            <div class="soundscape-bar" style="height:6px;"></div>
+          </div>
+        </div>`;
+    }
+
+    function _stopAll() {
+      SoundscapePlayer.stop();
+      if (currentAudio) { currentAudio.pause(); currentAudio.src = ''; currentAudio = null; }
+      isPlaying = false;
+    }
+
+    function playCard(card) {
+      if (currentCard?.name === card.name && isPlaying) { _pauseCurrent(); return; }
+      _stopAll();
+      currentCard = card;
+      if (card.audio_url) {
+        currentAudio = new Audio(card.audio_url);
+        currentAudio.loop = true; currentAudio.volume = 0.72;
+        currentAudio.play().catch(() => {
+          currentAudio = null;
+          SoundscapePlayer.play(card.base, card.params || {});
+        });
+      } else {
+        SoundscapePlayer.play(card.base, card.params || {});
+      }
+      isPlaying = true;
+      setCardActive(card.name, true);
+      showPlayer(card, true);
+    }
+
+    function _pauseCurrent() {
+      if (currentAudio) currentAudio.pause(); else SoundscapePlayer.pause();
+      isPlaying = false;
+      setCardActive(currentCard?.name, false);
+      const pb = document.getElementById('play-btn'); if (pb) pb.textContent = '▶';
+      document.getElementById('soundscape-bars')?.classList.remove('playing');
+      const ps = document.getElementById('player-sub'); if (ps) ps.textContent = 'Paused';
+    }
+
+    function _resumeCurrent() {
+      if (currentAudio) currentAudio.play(); else SoundscapePlayer.resume();
+      isPlaying = true;
+      setCardActive(currentCard?.name, true);
+      document.getElementById('play-btn').textContent = '⏸';
+      document.getElementById('soundscape-bars').classList.add('playing');
+      document.getElementById('player-sub').textContent = 'Now playing · Looping';
+    }
+
+    function togglePlay() {
+      if (!currentCard) return;
+      if (isPlaying) _pauseCurrent(); else _resumeCurrent();
+    }
+    window.togglePlay = togglePlay;
+
+    function setCardActive(name, active) {
+      document.querySelectorAll('.sc-card').forEach(c => {
+        const isThis = c.dataset.name === name;
+        c.classList.toggle('active', isThis && active);
+        const dot = c.querySelector('.sc-playing-dot');
+        if (dot) dot.style.display = (isThis && active) ? 'block' : 'none';
+      });
+    }
+
+    // ── SOUNDSCAPE RENDER ────────────────────────────────────────
+    window._scItems = {};
+
+    function renderCards(soundscapes) {
+      const grid = document.getElementById('sc-grid');
+      soundscapes.forEach((s, i) => { window._scItems[i] = s; });
+      grid.innerHTML = soundscapes.map((s, i) => `
+        <div class="sc-card" data-name="${s.name.replace(/"/g,'&quot;')}" onclick="window._playCard(${i})">
+          <div class="sc-playing-dot" style="display:none;"></div>
+          <span class="sc-card-emoji">${s.emoji}</span>
+          <div class="sc-card-name">${s.name}</div>
+          <div class="sc-card-desc">${s.description}</div>
+        </div>`).join('');
+      grid.style.display = 'grid';
+      document.getElementById('sc-loading').style.display = 'none';
+      document.getElementById('sc-custom').style.display = 'block';
+    }
+
+    function showFallbackGrid() {
+      renderCards([
+        { name:'Rain',   description:'Steady rainfall, soft and still.',       emoji:'🌧️', base:'rain',   params:{} },
+        { name:'Ocean',  description:'Waves rolling in, slow and open.',        emoji:'🌊', base:'ocean',  params:{} },
+        { name:'Forest', description:'Wind through trees, leaves breathing.',   emoji:'🌲', base:'forest', params:{} },
+        { name:'Fire',   description:'Crackling embers, warm and close.',       emoji:'🔥', base:'fire',   params:{} },
+        { name:'Space',  description:'Deep cosmic drone, vast and weightless.', emoji:'🌌', base:'space',  params:{} },
+        { name:'Storm',  description:'Rolling thunder, safe inside.',           emoji:'⛈️', base:'storm',  params:{} },
+      ]);
+    }
+
+    window._playCard = function(idx) { playCard(window._scItems[idx]); };
+
+    window.generateCustomSoundscape = async function() {
+      const input = document.getElementById('sc-input');
+      const btn   = document.getElementById('sc-gen-btn');
+      const prompt = input.value.trim();
+      if (!prompt) return;
+      btn.disabled = true; btn.textContent = '…'; input.disabled = true;
+      let errEl = document.getElementById('sc-custom-err');
+      if (!errEl) {
+        errEl = document.createElement('div'); errEl.id = 'sc-custom-err';
+        errEl.style.cssText = 'font-size:12px;color:rgba(239,100,100,0.85);margin-top:6px;';
+        document.getElementById('sc-custom').appendChild(errEl);
+      }
+      errEl.textContent = '';
+      try {
+        const data = await getSoundscapeMenu([], [], prompt);
+        const card = data.soundscapes[0];
+        if (!card) throw new Error('No soundscape returned');
+        const grid = document.getElementById('sc-grid');
+        const el = document.createElement('div');
+        el.className = 'sc-card'; el.dataset.name = card.name;
+        el.style.borderColor = 'rgba(155,93,229,0.35)';
+        el.innerHTML = `
+          <div class="sc-playing-dot" style="display:none;"></div>
+          <span class="sc-card-emoji">${card.emoji}</span>
+          <div class="sc-card-name">${card.name}</div>
+          <div class="sc-card-desc">${card.description}</div>
+          <div style="font-size:10px;color:var(--accent-soft);margin-top:6px;font-weight:700;letter-spacing:0.05em;">✦ CREATED FOR YOU</div>`;
+        el.onclick = () => playCard(card);
+        grid.prepend(el);
+        input.value = '';
+        playCard(card);
+      } catch(e) {
+        console.error('Custom soundscape error:', e);
+        errEl.textContent = e?.message || 'Could not generate — try again.';
+      } finally {
+        btn.disabled = false; btn.textContent = '→'; input.disabled = false;
+      }
+    };
+
+    // ── STORY PICKER ─────────────────────────────────────────────
+    const CLASSIC_STORIES = [
+      { title: 'The Moonlit Garden',             emoji: '🌕', desc: 'A gardener tends flowers that only bloom by moonlight',
+        text: `In a valley forgotten by maps, there lived an old gardener named Sera who had spent her whole life tending a garden that only bloomed at night.\n\nEvery evening she would pad out in her soft slippers, lantern swinging, to find each flower opening like a slow, quiet breath. The white roses first — pale as milk, petals curved inward, then gradually releasing their secret perfume. Then the night jasmine, then the silver poppies, then the blue moonflowers that hummed faintly in the dark.\n\nSera never asked why the flowers slept through the day. She only knew that caring for them at night had made her unafraid of darkness — had shown her that some of the most beautiful things only needed stillness and shadow to become themselves.\n\nOn the last night of every month she would sit in the center of the garden, all the flowers open around her, and simply breathe. The air was so soft it felt like being held.\n\nAnd one by one the flowers would turn their faces toward the moon, and Sera would close her eyes, and the garden and the gardener would fall asleep together, comfortable in the quiet dark.` },
+      { title: 'The Cloud Shepherd',             emoji: '☁️', desc: 'A shepherd who guides clouds across the sky at dusk',
+        text: `High above the world where the air is thin and cool, there was a shepherd who tended clouds.\n\nHis name was Elmo, and each morning before sunrise he would climb to the ridge above the town and begin his rounds. The clouds were sleepy creatures — they drifted and bunched and sometimes forgot where they were going. Elmo would nudge the small ones gently with his long staff, herding them toward the horizon where the light was softest.\n\nBy midday the clouds were playful. They bumped into each other and made shapes: a whale, a sleeping dog, a hand reaching toward something out of reach. Elmo watched with patient amusement.\n\nBut evening was his favorite. When the sun began to settle, the clouds would blush — pink first, then a deep amber, then the soft grey-violet of near sleep. They moved slowly now, heavy with the day, and Elmo walked behind them, murmuring, guiding them to the places where they could rest until morning.\n\nAs the last light went out he would sit on his ridge and watch them still. The sky was so quiet. And very slowly, without meaning to, the shepherd and the clouds drifted off together.` },
+      { title: 'The Sleeping Train',             emoji: '🚂', desc: 'A train that carries passengers into peaceful dreams',
+        text: `There is a train that only runs at night, and it has no schedule anyone can find.\n\nIf you are very tired and very still, you may hear it — a low, rhythmic rumble far away, growing closer, like a deep breath repeated. The station appears where you need it to be: a warm platform, soft lights, a small sign that says simply Onward.\n\nThe seats are wide and soft. The windows show nothing but gently moving dark — now and then a distant light, a reflection of the moon on still water. The other passengers are all half-asleep already, their heads resting, their breathing slow.\n\nThe conductor, an old woman with silver hair and quiet eyes, walks the aisle once to hand out something warm to drink. She doesn't speak. She smiles, and somehow that's enough.\n\nThe train moves through places that have no names — through night forests where the trees have grown into shapes of comfort, through plains where grass moves in slow silver waves, through tunnels lined with the soft sound of rain.\n\nNo one knows when they arrive. They only know that when the train finally stills, they are somewhere safe, and they are already asleep.` },
+      { title: 'The River\'s Turn',              emoji: '🌊', desc: 'A river that winds toward the sea, carrying old worries away',
+        text: `Every river remembers where it began, but only the oldest ones remember why they run.\n\nThe river that flowed through the town of Mirren had been running for so long it no longer hurried. It moved with the patience of something that has no doubt about where it is going. It passed under the old stone bridge and turned, slowly, toward the sea.\n\nThe people of Mirren had a custom: before sleep, they would go to the riverbank and name a worry — just whisper it — and let it go. Some said the river took these things away. Others said it was just the act of speaking aloud into the night air that helped.\n\nEither way, the people of Mirren slept deeply.\n\nAt night the river caught the light of the moon in pieces — little white fragments that scattered and rejoined as it moved. Frogs sat on the flat stones, absolutely still, as if they were thinking something very important and very slow.\n\nAnd the water moved on, quiet and sure, carrying everything it had been given — all the worries, all the fears, all the things too heavy for sleep — and bringing them, gently and without complaint, down to the wide sea where they could finally dissolve.` },
+      { title: 'The Library at the End of the Street', emoji: '📖', desc: 'A library open only at night, full of books that read themselves',
+        text: `At the very end of a long, quiet street there was a library that was only open after dark.\n\nNo one had built it, exactly. It had always been there — or so the neighbors said. The door was always unlocked. The lights were low and amber and smelled faintly of old paper.\n\nInside, the books would read themselves to you if you sat still enough. You didn't need to open them. You only had to settle into one of the chairs — which were old and deep and shaped, somehow, exactly like the feeling of being held — and close your eyes, and the books would begin.\n\nNot out loud. More like the way a dream begins: a shape, a color, a feeling of somewhere else. A story slipping in through the sides of sleep.\n\nSome people came to the library every night. Others came once and were satisfied. None of them could say exactly what they had read. Only that they had woken with a sense of having traveled somewhere very beautiful and very far away, and of having been, in that place, completely safe.\n\nThe library closed at dawn. But at night it waited, patient and lit, for anyone who needed a story to carry them to sleep.` },
+      { title: 'The Beekeeper\'s Evening',       emoji: '🐝', desc: 'A beekeeper who hums her bees to sleep each night',
+        text: `Every evening, when the light turned amber and the last of the wildflowers closed, the beekeeper Marta would walk slowly out to her hives.\n\nShe had fourteen hives, and each one she knew by sound. She had learned long ago that bees, like people, needed to be settled into sleep — not just left to fall into it alone. And so each evening she would hum.\n\nNot any particular song. The kind of hum that starts deep in the chest and rises slowly, the kind that has no words because words aren't the point. Just sound. Just the feeling of a voice saying: it's alright, the day is done, you are warm, you are safe.\n\nThe hives would quiet as she moved among them. The buzzing would slow — that particular shift from the busy sound of afternoon to the low, drowsy pulse of dusk. Marta moved without hurry. She pressed her palm, sometimes, gently against a hive and felt it hum back.\n\nWhen the last hive was still she would stand for a moment in the evening air and breathe. The garden was dark and soft. Somewhere a bird called once and then was silent.\n\nMarta walked back to her house. She made her tea. She sat by the window. And very slowly, like her bees, she let the day go.` },
+      { title: 'The Lighthouse in the Fog',      emoji: '🏠', desc: 'A lighthouse keeper whose steady light guides ships safely home',
+        text: `On a rocky point at the edge of the mainland there was a lighthouse that had been turning for longer than anyone could remember.\n\nThe keeper's name was Tobias, and he had been there for forty years. He didn't mind the isolation. He had come to love the particular quality of the foggy nights — the way the beam swung through the white nothing and came back again, steady, certain, patient.\n\nShips would emerge from the fog like half-remembered things — shapes becoming shapes, lights becoming lights. Tobias watched from the gallery, and when they passed safely, something in him eased.\n\nOn quiet nights he would sit inside with his lamp and read, or sometimes just listen. The ocean never stopped making sound — restless and ancient and entirely indifferent — and there was comfort in that too.\n\nHe had learned to sleep deeply here. The light moved through his room in its steady circle, and instead of waking him it became part of the rhythm of sleep — light, dark, light, dark — like breathing, like a heartbeat, like something that would go on as long as it needed to.\n\nTobias pulled his blanket up and felt the lighthouse turn around him, and slept.` },
+      { title: 'The Bakery at Four',             emoji: '🥐', desc: 'A baker who wakes before dawn to fill the town with warmth',
+        text: `The baker, whose name was Ilse, woke at four every morning without an alarm.\n\nHer body simply knew. Before the town was anything other than dark houses and sleeping streets, she was already at work. The oven heated slowly. She moved without turning on extra lights — she had done this so many times her hands remembered everything.\n\nThe bread she made was not complicated. Good flour, water, salt, time. But people came from the next town and the town after that to buy it, and what they said, always, was that it tasted like something they couldn't quite name. Like home, maybe. Like the good kind of tired.\n\nBy the time the sun came up, the bread was already in the window. The whole street smelled of it. Ilse would sit outside for a moment — just a moment, before the day properly began — and drink her coffee and watch the light change.\n\nIn the evening she went to sleep at eight, without shame, without apology. She had earned her rest. She fell asleep quickly, and she slept the way only those who have done good work can sleep — deeply, thoroughly, without reservation.` },
+      { title: 'The Cartographer\'s Last Map',   emoji: '🗺️', desc: 'A mapmaker who charts the landscape of her own dreams',
+        text: `The old cartographer had mapped every country she could reach, and some she could only reach by other means.\n\nHer walls were covered in them — careful lines in sepia and blue, names written small in her neat hand. Mountains, rivers, coastlines. The shapes of things that stayed still long enough to be drawn.\n\nBut in her last years she began a different map. Each morning she would sit at her desk and draw what she had seen in the night — not precisely, because dream geography is not precise, but faithfully, because she believed fidelity to something you experienced matters even if you can't prove it.\n\nThe dream map grew slowly. There was a coast where the tide came in made of light. There was a forest that moved. There was a city built in the shape of a sleep, tall and beautiful and full of doors.\n\nWhen visitors came and looked at the map on her table they were always quiet for a moment. 'Is this a real place?' one asked. 'It's the most real place I know,' she said.\n\nAt night she would fall asleep easily, already anticipating what new shape might be waiting. She went into it the way you go into a country you have traveled before — with curiosity, with respect, with the pen ready.` },
+      { title: 'The Whale Song',                 emoji: '🐋', desc: 'A whale that sings the ocean floor to sleep each night',
+        text: `Deep below the surface where the light gives out completely, a whale was singing.\n\nThe song had no beginning and no end. It moved through the water the way sound moves through a sleeping body — slow and resonant and felt more than heard. Small fish drifted toward it without deciding to. Coral opened faintly in its frequency.\n\nThe whale was old. It had been singing this particular arrangement of sounds for longer than any map above the water had been drawn. It didn't sing for anyone. Or perhaps it sang for everything.\n\nAbove the water, on the surface of the sea, a small boat drifted. The woman in the boat had been awake for a long time and was very tired. She lay on her back and looked at the sky — dense with stars, impossibly far, completely still — and slowly she became aware of something beneath her.\n\nNot vibration exactly. More like the memory of vibration. A deep low presence moving through the hull of the boat and into her back and her shoulders and her tired hands. Something ancient and unhurried and certain.\n\nShe didn't know what it was. She only knew she stopped bracing against sleep. She let herself go heavy. And the whale sang on below her in the dark, in the deep, in the place where everything finally rests.` },
+      { title: 'The Storm Watcher',              emoji: '⛈️', desc: 'A woman who finds peace in watching storms from her window',
+        text: `Her name was Adaeze, and she had never been afraid of storms.\n\nOther children hid under blankets when thunder came. Adaeze pressed her forehead to the glass. She wanted to see it — the white fork of lightning, the way the trees bent all at once like they were agreeing to something, the rain arriving in sheets from the left, then somehow from everywhere.\n\nShe grew up and still she watched. Her apartment had a window she had chosen carefully — wide and west-facing, perfect for weather. On storm nights she would turn off the lamps and sit in the dark with her tea and simply watch.\n\nThere was nothing to be done during a storm. That was what she loved. No list was appropriate. No task was urgent. The storm made everything else seem, correctly, very small.\n\nAfter the lightning and the rain came the long, clean aftermath — the air changed, heavier and easier at once, the streets below her dark and gleaming. Everything washed. Everything a little renewed.\n\nAdaeze would finish her tea and go to bed. She slept best after storms. She had been like this her whole life and she thought she understood why: storms reminded her that there were things much larger than whatever she was carrying, and that those things passed too, always, and left the world somehow more itself.` },
+      { title: 'The Mountain Pass at Dusk',      emoji: '🏔️', desc: 'A traveler finds rest at a high mountain pass as night falls',
+        text: `She had been walking for three days and the pass was finally behind her.\n\nThe far side of the mountain was different — softer, the angle of the slope changed, trees that were different trees. The light was going fast. She didn't rush.\n\nShe found a flat place among old stones and made her camp the way she always made it: without hurry, without wasted motion. The fire took on the first try. She was pleased by this.\n\nFrom her elevation she could see where she had come from — or some of it. The long valley, the lower forests, the vague suggestion of the river she had followed for a day. Everything small and quiet and further away than she had thought.\n\nThe stars here were different from the city stars. They were dense and very present, the kind that made you feel that you were on the outside of something enormous and held up against it.\n\nShe lay on her back for a while before sleep. Her body was tired in a way that felt clean. Her pack was propped up nearby. The fire burned low.\n\nShe had crossed the pass. Whatever was on the other side of it would wait until morning. Right now there was only the dark and the cold air and the particular satisfaction of being exactly where she had set out to be. She closed her eyes, and the mountain was very still around her.` },
+    ];
+
+    let _spViewStack  = [];
+    let _spAudio      = null;
+    let _spPlaying    = false;
+    let _spStoryText  = '';
+    let _spEmotions   = [];
+    let _spThemes     = [];
+
+    function openStoryPicker() {
+      document.getElementById('modal-story-picker').classList.add('open');
+      _spShowView('options');
+    }
+
+    function closeStoryPicker() {
+      document.getElementById('modal-story-picker').classList.remove('open');
+      _spStopAudio();
+    }
+    window.closeStoryPicker = closeStoryPicker;
+
+    function _spShowView(name) {
+      document.querySelectorAll('.sp-view').forEach(v => v.classList.remove('active'));
+      document.getElementById(`sp-view-${name}`)?.classList.add('active');
+      const titles = { options: 'Bedtime Story', dreams: 'Choose a Dream', classics: 'Classic Stories', loading: 'Writing Your Story…', reader: 'Your Story' };
+      document.getElementById('sp-header-title').textContent = titles[name] || 'Bedtime Story';
+      document.getElementById('sp-back-btn').style.visibility = name === 'options' ? 'hidden' : 'visible';
+      document.getElementById('sp-scroll').scrollTop = 0;
+    }
+
+    window.spGoBack = function() {
+      _spStopAudio();
+      _spShowView(_spViewStack.pop() || 'options');
+    };
+
+    window.spShowDreams = function() {
+      _spViewStack.push('options');
+      _spShowView('dreams');
+      const list = document.getElementById('sp-dream-list');
+      if (!allDreams.length) {
+        list.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--text-muted);font-size:14px;">No dreams logged yet.<br><br><a href="journal.html" style="color:var(--accent-soft);">Log your first dream →</a></div>`;
+        return;
+      }
+      list.innerHTML = allDreams.slice(0, 12).map((d, i) => {
+        const raw = d.createdAt;
+        const ms  = raw?.seconds ? raw.seconds * 1000 : (raw ? new Date(raw).getTime() : 0);
+        const date = ms ? new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+        const preview = (d.text || '').slice(0, 130) + ((d.text || '').length > 130 ? '…' : '');
+        return `<div class="sp-dream-item" onclick="startDreamStory(${i})">${date ? `<div class="sp-dream-date">${date}</div>` : ''}<div class="sp-dream-preview">${preview}</div></div>`;
+      }).join('');
+    };
+
+    window.startDreamStory = async function(idx) {
+      _spViewStack.push('dreams');
+      _spEmotions = allDreams[idx]?.emotions || latestEmotions;
+      _spThemes   = allDreams[idx]?.themes   || latestThemes;
+      _spShowView('loading');
+      document.getElementById('sp-loading-text').textContent = 'Writing your story…\nThis takes a moment';
+      try {
+        const result = await generateBedtimeStory(allDreams[idx]?.text || 'a quiet, peaceful night');
+        _spStoryText = (result.audio_url || '').replace('STORY_TEXT:', '');
+        _spShowReader(_spStoryText);
+      } catch(e) {
+        document.getElementById('sp-loading-text').innerHTML = `<span style="color:rgba(239,100,100,0.8);">Couldn't generate story<br>${e.message}</span>`;
+      }
+    };
+
+    window.spStartPatterns = async function(e) {
+      if (!allDreams.length) {
+        const desc = document.getElementById('sp-patterns-desc');
+        const orig = desc.textContent;
+        desc.style.color = 'rgba(239,100,100,0.85)';
+        desc.textContent = 'No dreams yet — log some first!';
+        setTimeout(() => { desc.style.color = ''; desc.textContent = orig; }, 2500);
+        return;
+      }
+      _spViewStack.push('options');
+      _spEmotions = latestEmotions;
+      _spThemes   = latestThemes;
+      _spShowView('loading');
+      document.getElementById('sp-loading-text').textContent = 'Analysing your dream patterns…\nThis takes a moment';
+      try {
+        const summaries = allDreams.slice(0, 8).map(d => (d.text || '').slice(0, 200));
+        const result = await generateStoryFromPatterns(summaries, latestEmotions, latestThemes);
+        _spStoryText = result.story_text || '';
+        _spShowReader(_spStoryText);
+      } catch(e) {
+        document.getElementById('sp-loading-text').innerHTML = `<span style="color:rgba(239,100,100,0.8);">Couldn't generate story<br>${e.message}</span>`;
+      }
+    };
+
+    window.spShowClassics = function() {
+      _spViewStack.push('options');
+      _spShowView('classics');
+      document.getElementById('sp-classics-list').innerHTML = CLASSIC_STORIES.map((s, i) => `
+        <div class="sp-classic-item" onclick="openClassicStory(${i})">
+          <span class="sp-classic-emoji">${s.emoji}</span>
+          <div style="flex:1;">
+            <div class="sp-classic-name">${s.title}</div>
+            <div class="sp-classic-desc">${s.desc}</div>
+          </div>
+          <span class="sp-classic-arrow">›</span>
+        </div>`).join('');
+    };
+
+    window.openClassicStory = function(idx) {
+      _spViewStack.push('classics');
+      _spStoryText = CLASSIC_STORIES[idx].text;
+      _spEmotions  = ['peaceful'];
+      _spThemes    = [];
+      _spShowReader(_spStoryText);
+    };
+
+    function _spShowReader(text) {
+      document.getElementById('sp-reader-text').textContent = text;
+      _spResetPlayer();
+      _spShowView('reader');
+    }
+
+    function _spResetPlayer() {
+      _spStopAudio();
+      const btn  = document.getElementById('sp-play-btn');
+      const lbl  = document.getElementById('sp-player-label');
+      const bars = document.getElementById('sp-bars');
+      if (btn)  { btn.textContent = '▶'; btn.disabled = false; }
+      if (lbl)  lbl.textContent = 'Tap to listen';
+      if (bars) bars.classList.remove('playing');
+      _spPlaying = false;
+    }
+
+    function _spStopAudio() {
+      if (_spAudio) { _spAudio.pause(); _spAudio.src = ''; _spAudio = null; }
+      _spPlaying = false;
+    }
+
+    function _spSetUI(icon, label, playing) {
+      const btn  = document.getElementById('sp-play-btn');
+      const lbl  = document.getElementById('sp-player-label');
+      const bars = document.getElementById('sp-bars');
+      if (btn)  { btn.textContent = icon; btn.disabled = false; }
+      if (lbl)  lbl.textContent = label;
+      if (bars) bars.classList.toggle('playing', playing);
+      _spPlaying = playing;
+    }
+
+    window.sp_toggleAudio = async function() {
+      if (_spPlaying) {
+        if (_spAudio) _spAudio.pause();
+        _spSetUI('▶', 'Paused', false);
+        return;
+      }
+      if (_spAudio && _spAudio.paused && _spAudio.currentTime > 0) {
+        _spAudio.play();
+        _spSetUI('⏸', 'Now reading…', true);
+        return;
+      }
+      const btn = document.getElementById('sp-play-btn');
+      btn.disabled = true;
+      _spSetUI('…', 'Preparing voice…', false);
+      try {
+        const url = await readStoryTTS(_spStoryText, _spEmotions, _spThemes);
+        _spAudio = new Audio(url);
+        _spAudio.onplay  = () => _spSetUI('⏸', 'Now reading…', true);
+        _spAudio.onpause = () => _spSetUI('▶', 'Paused', false);
+        _spAudio.onended = () => { _spSetUI('▶', 'Listen again', false); _spAudio = null; };
+        _spAudio.play();
+      } catch(e) {
+        console.error('SP TTS error:', e);
+        _spSetUI('▶', `Voice error: ${e.message}`, false);
+        btn.disabled = false;
+      }
+    };
+
+    window.openStoryPicker = openStoryPicker;
+
+    // ── GUIDED ROUTINE ────────────────────────────────────────────
+    let grSteps       = [];
+    let grIdx         = 0;
+    let grBreathTimer = null;
+    let grBreathOn    = false;
+    let grStoryPick   = null;
+    let grStoryAudio  = null;
+
+    function openGuidedRoutine() {
+      grSteps = ['intention'];
+      if (_irtRescripted) grSteps.push('irt');
+      grSteps.push('breathe', 'soundscape', 'story');
+      grIdx = 0;
+      document.getElementById('gr-modal').classList.add('open');
+      grRenderProgress();
+      grRenderStep();
+    }
+
+    function closeGuidedRoutine() {
+      grBreathOn = false;
+      clearInterval(grBreathTimer);
+      if (grStoryAudio) { grStoryAudio.pause(); grStoryAudio = null; }
+      document.getElementById('gr-modal').classList.remove('open');
+    }
+
+    function grRenderProgress() {
+      document.getElementById('gr-progress').innerHTML = grSteps.map((_, i) =>
+        `<div class="gr-dot ${i < grIdx ? 'done' : i === grIdx ? 'active' : ''}"></div>`
+      ).join('');
+    }
+
+    function grAdvance() {
+      grBreathOn = false;
+      clearInterval(grBreathTimer);
+      grIdx++;
+      if (grIdx >= grSteps.length) { closeGuidedRoutine(); return; }
+      grRenderProgress();
+      grRenderStep();
+    }
+
+    function grNext() {
+      if (grSteps[grIdx] === 'intention') {
+        const v = document.getElementById('gr-intention-input')?.value.trim();
+        if (v) localStorage.setItem('reverie_intention', v);
+      }
+      grAdvance();
+    }
+    function grSkip() { grAdvance(); }
+
+    function grRenderStep() {
+      const step    = grSteps[grIdx];
+      const body    = document.getElementById('gr-body');
+      const nextBtn = document.getElementById('gr-next-btn');
+      const skipBtn = document.getElementById('gr-skip-btn');
+      nextBtn.textContent = grIdx === grSteps.length - 1 ? 'Finish ✓' : 'Continue →';
+      nextBtn.disabled    = false;
+      skipBtn.style.display = 'flex';
+      if (step === 'intention')  grStepIntention(body);
+      else if (step === 'irt')   grStepIRT(body);
+      else if (step === 'breathe')    grStepBreathe(body, nextBtn);
+      else if (step === 'soundscape') grStepSoundscape(body);
+      else if (step === 'story')      grStepStory(body);
+    }
+
+    function grStepIntention(body) {
+      const saved = localStorage.getItem('reverie_intention') || '';
+      const hint  = latestEmotions.length
+        ? `Let go of the ${latestEmotions[0]} you've been carrying`
+        : 'Bring curiosity and openness to your dreams tonight';
+      body.innerHTML = `
+        <div class="gr-step-title">Set your intention</div>
+        <div class="gr-step-sub">A few words to carry you into sleep tonight</div>
+        <textarea class="gr-textarea" id="gr-intention-input" rows="3"
+          placeholder="${hint}">${saved}</textarea>
+        <div style="font-size:12px;color:rgba(255,255,255,0.28);margin-top:10px;">Optional — press Continue to skip</div>`;
+    }
+
+    function grStepIRT(body) {
+      const d = _irtRescripted;
+      body.innerHTML = `
+        <div class="gr-step-title">Nightmare rehearsal</div>
+        <div class="gr-step-sub">Read through your rescripted dream once before sleep</div>
+        <div class="gr-irt-text">${d.rescriptedText}</div>
+        <button class="btn btn-ghost" style="margin-top:16px;width:100%;" id="gr-irt-btn" onclick="grIrtListen()">🎧 Listen</button>`;
+    }
+
+    async function grIrtListen() {
+      const btn = document.getElementById('gr-irt-btn');
+      btn.disabled = true; btn.textContent = 'Loading…';
+      try {
+        const url = await readStoryTTS(_irtRescripted.rescriptedText, _irtRescripted.emotions||[], _irtRescripted.themes||[]);
+        const audio = new Audio(url);
+        audio.play();
+        btn.textContent = '⏹ Stop'; btn.disabled = false;
+        btn.onclick = () => { audio.pause(); btn.textContent = '🎧 Listen'; btn.onclick = grIrtListen; };
+      } catch(e) { btn.textContent = e.message.includes('cooling') ? 'Try again in 30s' : '🎧 Listen'; btn.disabled = false; }
+    }
+
+    const GR_PHASES = [
+      { label: 'Inhale',  secs: 4, cls: 'inhale' },
+      { label: 'Hold',    secs: 7, cls: 'hold'   },
+      { label: 'Exhale',  secs: 8, cls: 'exhale' },
+    ];
+
+    function grStepBreathe(body, nextBtn) {
+      body.innerHTML = `
+        <div class="gr-step-title">Breathe</div>
+        <div class="gr-step-sub">4 · 7 · 8 breathing — settles the nervous system</div>
+        <div class="gr-breathe-ring" id="gr-ring">
+          <div class="gr-breathe-count" id="gr-bcount">—</div>
+          <div class="gr-breathe-label" id="gr-blabel">Get ready</div>
+        </div>
+        <div class="gr-cycle-dots">
+          ${[0,1,2,3].map(i=>`<div class="gr-cycle-dot" id="gr-bcd-${i}"></div>`).join('')}
+        </div>`;
+      nextBtn.textContent = 'Skip →';
+      grBreathOn = true;
+      let cycle = 0, pIdx = 0, cd = 0;
+      const ring  = () => document.getElementById('gr-ring');
+      const count = () => document.getElementById('gr-bcount');
+      const label = () => document.getElementById('gr-blabel');
+
+      function tick() {
+        if (!grBreathOn) return;
+        if (cycle >= 4) {
+          grBreathOn = false;
+          ring().className = 'gr-breathe-ring done';
+          label().textContent = 'Done ✓'; count().textContent = '';
+          nextBtn.textContent = 'Continue →';
+          return;
+        }
+        const p = GR_PHASES[pIdx];
+        ring().className = `gr-breathe-ring ${p.cls}`;
+        label().textContent = p.label;
+        cd = p.secs; count().textContent = cd;
+        grBreathTimer = setInterval(() => {
+          if (!grBreathOn) { clearInterval(grBreathTimer); return; }
+          cd--; count().textContent = cd > 0 ? cd : '';
+          if (cd <= 0) {
+            clearInterval(grBreathTimer);
+            pIdx++;
+            if (pIdx >= GR_PHASES.length) {
+              pIdx = 0; cycle++;
+              const dot = document.getElementById(`gr-bcd-${cycle-1}`);
+              if (dot) dot.className = 'gr-cycle-dot done';
+            }
+            setTimeout(tick, 400);
+          }
+        }, 1000);
+      }
+      setTimeout(tick, 800);
+    }
+
+    function grStepSoundscape(body) {
+      const card = window._scItems && window._scItems[0];
+      if (card && !isPlaying) window._playCard(0);
+      const info = card
+        ? `<div class="gr-sc-info">
+             <div class="gr-sc-emoji">${card.emoji}</div>
+             <div><div class="gr-sc-name">${card.name}</div>
+             <div class="gr-sc-desc">${card.description}</div></div>
+           </div>
+           <div style="font-size:13px;color:rgba(155,93,229,0.8);margin-top:12px;">▶ Now playing · continues in background</div>`
+        : `<div style="color:rgba(255,255,255,0.45);font-size:14px;">Choose a soundscape below after finishing the routine.</div>`;
+      body.innerHTML = `
+        <div class="gr-step-title">Soundscape</div>
+        <div class="gr-step-sub">Ambient sound to ease you into sleep</div>
+        ${info}`;
+    }
+
+    function grStepStory(body) {
+      if (!grStoryPick) {
+        const pool = typeof CLASSIC_STORIES !== 'undefined' ? CLASSIC_STORIES : [];
+        grStoryPick = pool[Math.floor(Math.random() * pool.length)] || null;
+      }
+      const p = grStoryPick;
+      body.innerHTML = p ? `
+        <div class="gr-step-title">Drift off</div>
+        <div class="gr-step-sub">A story to carry you into sleep</div>
+        <div class="gr-story-card">
+          <div class="gr-story-name">${p.emoji} ${p.title}</div>
+          <div class="gr-story-preview">${p.text.slice(0,160)}…</div>
+          <div class="gr-story-btns">
+            <button class="btn btn-ghost" id="gr-splay-btn" onclick="grToggleStory()">🎧 Listen</button>
+            <button class="btn btn-ghost" onclick="closeGuidedRoutine();openStoryPicker()">Browse ›</button>
+          </div>
+        </div>` :
+        `<div class="gr-step-title">You're all set ✨</div>
+         <div class="gr-step-sub">Sleep well tonight.</div>`;
+    }
+
+    async function grToggleStory() {
+      const btn = document.getElementById('gr-splay-btn');
+      if (grStoryAudio) {
+        grStoryAudio.pause(); grStoryAudio = null;
+        btn.textContent = '🎧 Listen'; return;
+      }
+      btn.disabled = true; btn.textContent = 'Loading…';
+      try {
+        const url = await readStoryTTS(grStoryPick.text, latestEmotions, latestThemes);
+        grStoryAudio = new Audio(url);
+        grStoryAudio.play();
+        btn.textContent = '⏹ Stop'; btn.disabled = false;
+        grStoryAudio.onended = () => { btn.textContent = '🎧 Listen'; grStoryAudio = null; };
+      } catch(e) { btn.textContent = e.message.includes('cooling') ? 'Try again in 30s' : '🎧 Listen'; btn.disabled = false; }
+    }
+
+    window.openGuidedRoutine  = openGuidedRoutine;
+    window.closeGuidedRoutine = closeGuidedRoutine;
+    window.grNext             = grNext;
+    window.grSkip             = grSkip;
+    window.grIrtListen        = grIrtListen;
+    window.grToggleStory      = grToggleStory;
+
+    // ── IRT REHEARSAL ──────────────────────────────────────────────
+    let _irtRescripted = null;
+    let _irtAudio      = null;
+    let _irtPlaying    = false;
+
+    function renderIrtCard(dream) {
+      const wrap = document.getElementById('irt-rehearse-wrap');
+      if (!wrap || !dream?.rescriptedText) return;
+      _irtRescripted = dream;
+
+      wrap.innerHTML = `
+        <div class="irt-rehearse-card">
+          <div class="irt-rehearse-header">
+            <div class="routine-icon">🌙</div>
+            <div style="flex:1;">
+              <div class="routine-name" style="display:flex;align-items:center;gap:6px;">
+                Nightmare rehearsal <span class="irt-badge-sm">IRT</span>
+              </div>
+              <div class="routine-note">Rehearse your rescripted dream before sleep</div>
+            </div>
+          </div>
+          <div class="irt-rehearse-text" id="irt-rh-text">${dream.rescriptedText}</div>
+          <div class="irt-rehearse-actions">
+            <button class="btn btn-ghost" onclick="openRehearsal()">🌙 Start Rehearsal</button>
+            <a class="btn btn-ghost" href="dream.html?id=${dream.id}" style="text-align:center;text-decoration:none;">View dream ›</a>
+          </div>
+        </div>`;
+    }
+
+    async function irtRehearseToggle() {
+      if (!_irtRescripted) return;
+      const btn = document.getElementById('irt-rh-listen-btn');
+
+      if (_irtPlaying && _irtAudio) {
+        _irtAudio.pause();
+        _irtAudio.currentTime = 0;
+        _irtAudio = null;
+        _irtPlaying = false;
+        btn.textContent = '🎧 Listen';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Loading…';
+      try {
+        const url = await readStoryTTS(
+          _irtRescripted.rescriptedText,
+          _irtRescripted.emotions || [],
+          _irtRescripted.themes   || []
+        );
+        _irtAudio = new Audio(url);
+        _irtAudio.onended = () => {
+          _irtPlaying = false;
+          btn.textContent = '🎧 Listen';
+          btn.disabled = false;
+        };
+        _irtAudio.play();
+        _irtPlaying = true;
+        btn.textContent = '⏹ Stop';
+        btn.disabled = false;
+      } catch (e) {
+        btn.textContent = e.message.includes('cooling') ? 'Try again in 30s' : '🎧 Listen';
+        btn.disabled = false;
+      }
+    }
+
+    window.irtRehearseToggle = irtRehearseToggle;
+
+    // ── REHEARSAL TIMER ───────────────────────────────────────────
+    let _rtTimer    = null;
+    let _rtRunning  = false;
+    let _rtSeconds  = 300;
+    let _rtAudio    = null;
+    let _rtListening = false;
+
+    function openRehearsal() {
+      if (!_irtRescripted) return;
+      _rtSeconds = 300; _rtRunning = false;
+      document.getElementById('rt-dream-text').textContent = _irtRescripted.rescriptedText;
+      document.getElementById('rt-time').textContent = '5:00';
+      document.getElementById('rt-time-label').textContent = 'ready';
+      document.getElementById('rt-ring').className = 'rt-timer-ring';
+      document.getElementById('rt-start-btn').textContent = '▶ Start';
+      document.getElementById('rt-listen-btn').textContent = '🎧 Listen';
+      document.getElementById('rt-modal').classList.add('open');
+    }
+
+    function closeRehearsal() {
+      clearInterval(_rtTimer); _rtRunning = false;
+      if (_rtAudio) { _rtAudio.pause(); _rtAudio = null; }
+      _rtListening = false;
+      document.getElementById('rt-modal').classList.remove('open');
+    }
+
+    function rtToggleTimer() {
+      const btn = document.getElementById('rt-start-btn');
+      if (_rtRunning) {
+        clearInterval(_rtTimer); _rtRunning = false;
+        btn.textContent = '▶ Resume';
+        document.getElementById('rt-ring').classList.remove('active');
+        return;
+      }
+      if (_rtSeconds <= 0) return;
+      _rtRunning = true;
+      btn.textContent = '⏸ Pause';
+      document.getElementById('rt-ring').className = 'rt-timer-ring active';
+      _rtTimer = setInterval(() => {
+        _rtSeconds--;
+        const m = Math.floor(_rtSeconds / 60);
+        const s = _rtSeconds % 60;
+        document.getElementById('rt-time').textContent = `${m}:${String(s).padStart(2,'0')}`;
+        if (_rtSeconds <= 0) {
+          clearInterval(_rtTimer); _rtRunning = false;
+          document.getElementById('rt-ring').className = 'rt-timer-ring done';
+          document.getElementById('rt-time').textContent = '✓';
+          document.getElementById('rt-time-label').textContent = 'done';
+          btn.textContent = 'Done ✓';
+        }
+      }, 1000);
+    }
+
+    async function rtToggleListen() {
+      const btn = document.getElementById('rt-listen-btn');
+      if (_rtListening && _rtAudio) {
+        _rtAudio.pause(); _rtAudio = null; _rtListening = false;
+        btn.textContent = '🎧 Listen'; return;
+      }
+      btn.disabled = true; btn.textContent = 'Loading…';
+      try {
+        const url = await readStoryTTS(_irtRescripted.rescriptedText, _irtRescripted.emotions||[], _irtRescripted.themes||[]);
+        _rtAudio = new Audio(url);
+        _rtAudio.play(); _rtListening = true;
+        btn.textContent = '⏹ Stop'; btn.disabled = false;
+        _rtAudio.onended = () => { _rtListening = false; btn.textContent = '🎧 Listen'; _rtAudio = null; };
+        if (!_rtRunning && _rtSeconds === 300) rtToggleTimer();
+      } catch(e) { btn.textContent = e.message.includes('cooling') ? 'Try again in 30s' : '🎧 Listen'; btn.disabled = false; }
+    }
+
+    window.openRehearsal   = openRehearsal;
+    window.closeRehearsal  = closeRehearsal;
+    window.rtToggleTimer   = rtToggleTimer;
+    window.rtToggleListen  = rtToggleListen;
+
+    // ── INIT ─────────────────────────────────────────────────────
+    requireAuth(async user => {
+      const dreams = await getDreams(user.uid).catch(() => []);
+      allDreams = dreams;
+      const latest   = dreams[0];
+      latestDreamText = latest?.text || '';
+      latestEmotions  = latest?.emotions || [];
+      latestThemes    = latest?.themes   || [];
+      const emotions  = latestEmotions;
+      const themes    = latestThemes;
+
+      // Show rehearsal card for most recent rescripted dream
+      const irtDream = dreams.find(d => d.rescriptedText);
+      if (irtDream) renderIrtCard(irtDream);
+
+      const [scResult, routineResult] = await Promise.allSettled([
+        getSoundscapeMenu(emotions, themes),
+        getWinddownRoutine(emotions, themes),
+      ]);
+
+      if (scResult.status === 'fulfilled') renderCards(scResult.value.soundscapes);
+      else showFallbackGrid();
+
+      if (routineResult.status === 'fulfilled') {
+        renderRoutine(routineResult.value.intention, routineResult.value.items);
+      } else {
+        console.error('Wind-down routine failed:', routineResult.reason);
+        renderFallbackRoutine();
+      }
+    });
+  </script>
+
+</body>
+</html>

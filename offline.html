@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>Offline · Reverie</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      background: linear-gradient(160deg, #06001c 0%, #0d0225 100%);
+      font-family: 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      padding: 40px 32px;
+    }
+
+    .orb {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 38% 32%, #c084fc, #7c3aed 50%, #3b0764);
+      box-shadow: 0 0 60px 20px rgba(124, 58, 237, 0.35);
+      margin-bottom: 32px;
+      opacity: 0.6;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 10px;
+      letter-spacing: 0.01em;
+    }
+
+    p {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.45);
+      line-height: 1.7;
+      margin-bottom: 36px;
+      max-width: 260px;
+    }
+
+    button {
+      background: rgba(124, 58, 237, 0.25);
+      border: 1px solid rgba(155, 93, 229, 0.45);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      padding: 14px 40px;
+      border-radius: 100px;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: background 0.2s;
+    }
+
+    button:active {
+      background: rgba(124, 58, 237, 0.45);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="orb"></div>
+    <h1>You're offline</h1>
+    <p>Check your connection and try again — your dreams will be here when you're back.</p>
+    <button onclick="gonative.webview.reload()">Try again</button>
+  </div>
+</body>
+</html>

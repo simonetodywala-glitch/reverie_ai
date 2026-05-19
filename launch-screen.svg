@@ -1,0 +1,106 @@
+<svg width="1242" height="2688" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#06001c"/>
+      <stop offset="100%" stop-color="#0d0225"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#7c3aed" stop-opacity="0.35"/>
+      <stop offset="60%"  stop-color="#7c3aed" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orb" cx="38%" cy="32%" r="65%">
+      <stop offset="0%"   stop-color="#c084fc"/>
+      <stop offset="45%"  stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#3b0764"/>
+    </radialGradient>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="28" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softglow" x="-150%" y="-150%" width="400%" height="400%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="60"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1242" height="2688" fill="url(#bg)"/>
+
+  <!-- Stars -->
+  <g fill="white">
+    <circle cx="112"  cy="180"  r="1.5" opacity="0.6"/>
+    <circle cx="340"  cy="95"   r="1"   opacity="0.4"/>
+    <circle cx="520"  cy="210"  r="2"   opacity="0.7"/>
+    <circle cx="730"  cy="60"   r="1.5" opacity="0.5"/>
+    <circle cx="890"  cy="150"  r="1"   opacity="0.4"/>
+    <circle cx="1050" cy="240"  r="2"   opacity="0.6"/>
+    <circle cx="1180" cy="110"  r="1.5" opacity="0.5"/>
+    <circle cx="60"   cy="420"  r="1"   opacity="0.3"/>
+    <circle cx="200"  cy="380"  r="2"   opacity="0.5"/>
+    <circle cx="460"  cy="310"  r="1.5" opacity="0.6"/>
+    <circle cx="640"  cy="450"  r="1"   opacity="0.4"/>
+    <circle cx="820"  cy="340"  r="2"   opacity="0.55"/>
+    <circle cx="980"  cy="400"  r="1.5" opacity="0.4"/>
+    <circle cx="1140" cy="360"  r="1"   opacity="0.5"/>
+    <circle cx="80"   cy="620"  r="2"   opacity="0.4"/>
+    <circle cx="310"  cy="560"  r="1.5" opacity="0.35"/>
+    <circle cx="580"  cy="680"  r="1"   opacity="0.5"/>
+    <circle cx="760"  cy="590"  r="2"   opacity="0.4"/>
+    <circle cx="1020" cy="640"  r="1.5" opacity="0.5"/>
+    <circle cx="1200" cy="580"  r="1"   opacity="0.35"/>
+    <circle cx="150"  cy="800"  r="1.5" opacity="0.3"/>
+    <circle cx="400"  cy="760"  r="1"   opacity="0.4"/>
+    <circle cx="700"  cy="820"  r="2"   opacity="0.45"/>
+    <circle cx="950"  cy="780"  r="1.5" opacity="0.35"/>
+    <circle cx="1160" cy="840"  r="1"   opacity="0.4"/>
+    <circle cx="50"   cy="1600" r="1.5" opacity="0.3"/>
+    <circle cx="280"  cy="1680" r="1"   opacity="0.35"/>
+    <circle cx="490"  cy="1550" r="2"   opacity="0.4"/>
+    <circle cx="900"  cy="1620" r="1.5" opacity="0.35"/>
+    <circle cx="1100" cy="1700" r="1"   opacity="0.4"/>
+    <circle cx="1210" cy="1560" r="2"   opacity="0.3"/>
+    <circle cx="130"  cy="1900" r="1"   opacity="0.35"/>
+    <circle cx="370"  cy="1980" r="1.5" opacity="0.3"/>
+    <circle cx="650"  cy="1850" r="1"   opacity="0.4"/>
+    <circle cx="870"  cy="1920" r="2"   opacity="0.35"/>
+    <circle cx="1070" cy="1860" r="1.5" opacity="0.3"/>
+    <circle cx="90"   cy="2200" r="2"   opacity="0.3"/>
+    <circle cx="320"  cy="2280" r="1"   opacity="0.35"/>
+    <circle cx="560"  cy="2150" r="1.5" opacity="0.4"/>
+    <circle cx="780"  cy="2320" r="1"   opacity="0.3"/>
+    <circle cx="1000" cy="2200" r="2"   opacity="0.35"/>
+    <circle cx="1180" cy="2350" r="1.5" opacity="0.3"/>
+    <circle cx="240"  cy="2500" r="1"   opacity="0.25"/>
+    <circle cx="500"  cy="2560" r="1.5" opacity="0.3"/>
+    <circle cx="840"  cy="2480" r="1"   opacity="0.25"/>
+    <circle cx="1120" cy="2540" r="2"   opacity="0.3"/>
+  </g>
+
+  <!-- Outer soft halo -->
+  <circle cx="621" cy="1230" r="520" fill="url(#halo)"/>
+
+  <!-- Mid glow layer -->
+  <circle cx="621" cy="1230" r="260" fill="#7c3aed" opacity="0.12" filter="url(#softglow)"/>
+
+  <!-- Orb -->
+  <circle cx="621" cy="1230" r="210" fill="url(#orb)" filter="url(#glow)"/>
+
+  <!-- Orb inner highlight -->
+  <ellipse cx="560" cy="1155" rx="70" ry="50" fill="white" opacity="0.08"/>
+
+  <!-- Wordmark -->
+  <text
+    x="621"
+    y="1530"
+    font-family="'Nunito', 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, sans-serif"
+    font-size="96"
+    font-weight="700"
+    fill="white"
+    text-anchor="middle"
+    letter-spacing="4"
+    opacity="0.95">Reverie</text>
+</svg>

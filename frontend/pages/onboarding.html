@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Reverie — Welcome</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,700;0,800;0,900;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100%;
+      background: #06001c;
+      font-family: 'Nunito', sans-serif;
+      color: #f0e8ff;
+      overflow-x: hidden;
+    }
+
+    /* ── BACKGROUND ── */
+    .bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: linear-gradient(160deg, #06001c 0%, #0d0225 60%, #06001c 100%);
+      overflow: hidden;
+    }
+
+    .bg-orb {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .bg-orb-1 {
+      width: 420px; height: 420px;
+      top: 5%; left: 50%;
+      transform: translateX(-50%);
+      background: radial-gradient(circle, rgba(124,58,237,0.14) 0%, transparent 70%);
+      animation: orbPulse 8s ease-in-out infinite;
+    }
+
+    .bg-orb-2 {
+      width: 280px; height: 280px;
+      bottom: 15%; right: -60px;
+      background: radial-gradient(circle, rgba(192,132,252,0.07) 0%, transparent 70%);
+      animation: orbPulse 12s ease-in-out infinite reverse;
+    }
+
+    .bg-orb-3 {
+      width: 200px; height: 200px;
+      top: 40%; left: -40px;
+      background: radial-gradient(circle, rgba(109,40,217,0.1) 0%, transparent 70%);
+      animation: orbPulse 10s ease-in-out infinite 3s;
+    }
+
+    @keyframes orbPulse {
+      0%, 100% { opacity: 0.6; transform: translateX(-50%) scale(1); }
+      50%       { opacity: 1;   transform: translateX(-50%) scale(1.12); }
+    }
+    .bg-orb-2 { animation-name: orbPulse2; }
+    .bg-orb-3 { animation-name: orbPulse3; }
+    @keyframes orbPulse2 { 0%,100%{opacity:.5;transform:scale(1);}50%{opacity:.9;transform:scale(1.15);} }
+    @keyframes orbPulse3 { 0%,100%{opacity:.4;transform:scale(1);}50%{opacity:.8;transform:scale(1.1);} }
+
+    /* stars */
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: white;
+      animation: twinkle var(--dur, 4s) ease-in-out infinite var(--delay, 0s);
+    }
+    @keyframes twinkle {
+      0%,100% { opacity: var(--lo, 0.15); }
+      50%      { opacity: var(--hi, 0.55); }
+    }
+
+    /* ── CONTENT ── */
+    .story-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 360px;
+      margin: 0 auto;
+      padding: 72px 28px 200px;
+      min-height: 100vh;
+    }
+
+    .story-block {
+      margin-bottom: 4px;
+      opacity: 0;
+      animation: fadeUp 0.4s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .story-line {
+      font-size: 25px;
+      font-weight: 800;
+      line-height: 1.45;
+      color: #f0e8ff;
+      min-height: 1em;
+      letter-spacing: -0.01em;
+    }
+
+    .story-line.dim {
+      color: rgba(240, 232, 255, 0.38);
+      font-size: 19px;
+      font-weight: 700;
+      margin-top: 2px;
+      letter-spacing: 0;
+    }
+
+    .story-line.small {
+      color: rgba(192,132,252,0.6);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .story-spacer { height: 22px; }
+
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: rgba(192,132,252,0.7);
+      vertical-align: text-bottom;
+      margin-left: 2px;
+      animation: blink 0.9s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+
+    /* ── INPUT ── */
+    .input-area {
+      margin-top: 20px;
+      animation: fadeUp 0.3s ease forwards;
+    }
+
+    .story-input {
+      background: rgba(255,255,255,0.055);
+      border: 1.5px solid rgba(155,93,229,0.32);
+      border-radius: 14px;
+      padding: 14px 18px;
+      color: #fff;
+      font-family: 'Nunito', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .story-input:focus { border-color: rgba(155,93,229,0.72); }
+    .story-input::placeholder { color: rgba(255,255,255,0.2); font-weight: 400; }
+
+    .continue-btn {
+      margin-top: 12px;
+      width: 100%;
+      padding: 14px;
+      border-radius: 100px;
+      background: rgba(124,58,237,0.2);
+      border: 1px solid rgba(155,93,229,0.38);
+      color: #fff;
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+      transition: background 0.2s;
+    }
+    .continue-btn:active { background: rgba(124,58,237,0.4); }
+
+    /* ── CHOICES ── */
+    .choices {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      animation: fadeUp 0.3s ease forwards;
+    }
+
+    .choice-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 14px;
+      padding: 15px 18px;
+      color: rgba(240,232,255,0.85);
+      font-family: 'Nunito', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .choice-btn:active {
+      background: rgba(124,58,237,0.26);
+      border-color: rgba(155,93,229,0.5);
+      transform: scale(0.98);
+    }
+
+    /* ── AUTH ── */
+    .auth-area { margin-top: 8px; }
+
+    .auth-input {
+      width: 100%;
+      background: rgba(255,255,255,0.055);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 15px 18px;
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      outline: none;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .auth-input:focus { border-color: rgba(155,93,229,0.5); }
+    .auth-input::placeholder { color: rgba(255,255,255,0.26); }
+
+    .primary-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 100px;
+      background: linear-gradient(135deg, #7c3aed, #9b5de5);
+      border: none;
+      color: #fff;
+      font-family: 'Nunito', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 6px 28px rgba(124,58,237,0.38);
+      letter-spacing: -0.01em;
+      transition: transform 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .primary-btn:active { transform: scale(0.97); }
+
+    .or-divider {
+      text-align: center;
+      color: rgba(255,255,255,0.26);
+      font-size: 13px;
+      margin: 14px 0;
+    }
+
+    .google-btn {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 14px 18px;
+      color: rgba(240,232,255,0.88);
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: background 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .google-btn:active { background: rgba(255,255,255,0.1); }
+
+    .switch-link {
+      text-align: center;
+      color: rgba(255,255,255,0.34);
+      font-size: 14px;
+      margin-top: 18px;
+    }
+    .switch-link span { color: #c084fc; font-weight: 700; cursor: pointer; }
+
+    .error-msg {
+      color: #f87171;
+      font-size: 14px;
+      margin-top: 10px;
+      text-align: center;
+      min-height: 20px;
+    }
+    .skip-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 100;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.3);
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 8px 12px;
+      transition: color 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .skip-btn:active { color: rgba(255,255,255,0.7); }
+  </style>
+</head>
+<body>
+
+<!-- BACKGROUND -->
+<div class="bg" id="bg">
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+  <div class="bg-orb bg-orb-3"></div>
+</div>
+
+<button class="skip-btn" id="skip-btn">Skip →</button>
+<div class="story-wrap" id="story"></div>
+
+<script type="module">
+  import { signUp, logIn, signInWithGoogle, auth } from '../js/auth.js';
+  import { saveUserProfile } from '../js/firebase.js';
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  // ── STARS ──
+  const bg = document.getElementById('bg');
+  const starData = [
+    [112,180,1.5,0.6],[340,95,1,0.4],[520,210,2,0.7],[730,60,1.5,0.5],
+    [890,150,1,0.4],[60,420,1,0.3],[200,380,2,0.5],[460,310,1.5,0.6],
+    [640,450,1,0.4],[820,340,2,0.55],[80,620,2,0.4],[310,560,1.5,0.35],
+    [580,680,1,0.5],[760,590,2,0.4],[150,800,1.5,0.3],[400,760,1,0.4],
+    [700,820,2,0.45],[950,780,1.5,0.35],[55,1100,1.5,0.28],[290,1050,1,0.32],
+    [480,1180,2,0.38],[810,1120,1.5,0.3],[1020,1200,1,0.35],
+  ];
+  starData.forEach(([x, y, r, opacity]) => {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const dur   = (3 + Math.random() * 5).toFixed(1) + 's';
+    const delay = (Math.random() * 4).toFixed(1) + 's';
+    const lo    = (opacity * 0.25).toFixed(2);
+    const hi    = (opacity).toFixed(2);
+    s.style.cssText = `width:${r*2}px;height:${r*2}px;left:${x/10}%;top:${y}px;
+      --dur:${dur};--delay:${delay};--lo:${lo};--hi:${hi};`;
+    bg.appendChild(s);
+  });
+
+  // ── CORE ──
+  const collected = {};
+  const storyEl   = document.getElementById('story');
+  const sleep     = ms => new Promise(r => setTimeout(r, ms));
+  let   skipped   = false;
+
+  document.getElementById('skip-btn').onclick = () => {
+    skipped = true;
+    document.getElementById('skip-btn').style.display = 'none';
+    storyEl.innerHTML = '';
+    showAuth(false);
+  };
+
+  function scrollDown() {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  }
+
+  function newBlock() {
+    const b = document.createElement('div');
+    b.className = 'story-block';
+    storyEl.appendChild(b);
+    return b;
+  }
+
+  // Realistic typing: variable speed, pauses on punctuation
+  async function typeInto(el, text) {
+    const cursor = document.createElement('span');
+    cursor.className = 'cursor';
+    el.appendChild(cursor);
+
+    for (let i = 0; i < text.length; i++) {
+      const ch   = text[i];
+      const node = document.createTextNode(ch);
+      el.insertBefore(node, cursor);
+
+      let delay = 42 + Math.random() * 30; // ~42–72ms base
+      if (ch === '.' || ch === '!' || ch === '?') delay = 320 + Math.random() * 180;
+      else if (ch === ',') delay = 160 + Math.random() * 80;
+      else if (ch === ' ') delay = 55 + Math.random() * 35;
+      // Occasional stumble — rare longer pause mid-word
+      if (Math.random() < 0.04) delay += 180 + Math.random() * 120;
+
+      await sleep(delay);
+    }
+    cursor.remove();
+  }
+
+  async function showLines(lines) {
+    if (skipped) return;
+    const block = newBlock();
+    for (const line of lines) {
+      if (skipped) return;
+      if (line === '') {
+        const sp = document.createElement('div');
+        sp.className = 'story-spacer';
+        block.appendChild(sp);
+        await sleep(220);
+        continue;
+      }
+      let cls = 'story-line';
+      let text = line;
+      if (line.startsWith('~'))  { cls += ' dim';   text = line.slice(1); }
+      if (line.startsWith('^'))  { cls += ' small';  text = line.slice(1); }
+      const p = document.createElement('p');
+      p.className = cls;
+      block.appendChild(p);
+      scrollDown();
+      await sleep(100);
+      await typeInto(p, text);
+    }
+    scrollDown();
+  }
+
+  async function askText(sentence, key, placeholder, inputType = 'text', defaultVal = '') {
+    if (skipped) return new Promise(() => {});
+    const block = newBlock();
+    const p = document.createElement('p');
+    p.className = 'story-line';
+    block.appendChild(p);
+    scrollDown();
+    await typeInto(p, sentence + ' ');
+
+    const blank = document.createElement('span');
+    blank.style.cssText = 'color:rgba(192,132,252,0.32);font-weight:900;';
+    blank.textContent = '___';
+    p.appendChild(blank);
+
+    const area = document.createElement('div');
+    area.className = 'input-area';
+
+    const input = document.createElement('input');
+    input.type = inputType;
+    input.className = 'story-input';
+    input.placeholder = placeholder;
+    if (defaultVal) input.value = defaultVal;
+    area.appendChild(input);
+
+    const btn = document.createElement('button');
+    btn.className = 'continue-btn';
+    btn.textContent = 'Continue →';
+    area.appendChild(btn);
+
+    block.appendChild(area);
+    await sleep(40);
+    scrollDown();
+    input.focus();
+
+    return new Promise(resolve => {
+      const submit = () => {
+        const raw = input.value.trim() || input.value;
+        if (!raw) { input.focus(); return; }
+        collected[key] = raw;
+        const display = inputType === 'time' ? formatTime(raw) : raw;
+        blank.textContent = display;
+        blank.style.cssText = 'color:#c084fc;font-weight:900;';
+        area.remove();
+        scrollDown();
+        resolve(raw);
+      };
+      btn.onclick = submit;
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+    });
+  }
+
+  async function askChoice(sentence, key, options) {
+    if (skipped) return new Promise(() => {});
+    const block = newBlock();
+    const p = document.createElement('p');
+    p.className = 'story-line';
+    block.appendChild(p);
+    scrollDown();
+    await typeInto(p, sentence + ' ');
+
+    const blank = document.createElement('span');
+    blank.style.cssText = 'color:rgba(192,132,252,0.32);font-weight:900;';
+    blank.textContent = '___';
+    p.appendChild(blank);
+
+    const choices = document.createElement('div');
+    choices.className = 'choices';
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.textContent = opt.label;
+      choices.appendChild(btn);
+    });
+    block.appendChild(choices);
+    await sleep(40);
+    scrollDown();
+
+    return new Promise(resolve => {
+      choices.querySelectorAll('.choice-btn').forEach((btn, i) => {
+        btn.onclick = () => {
+          collected[key] = options[i].value;
+          blank.textContent = options[i].label;
+          blank.style.cssText = 'color:#c084fc;font-weight:900;';
+          choices.remove();
+          scrollDown();
+          resolve(options[i].value);
+        };
+      });
+    });
+  }
+
+  function formatTime(val) {
+    if (!val) return val;
+    const [h, m] = val.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`;
+  }
+
+  async function showAuth(isSignIn = false) {
+    const block = newBlock();
+    block.style.marginTop = '14px';
+    const area = document.createElement('div');
+    area.className = 'auth-area';
+    block.appendChild(area);
+    scrollDown();
+
+    const finish = () => { localStorage.setItem('reverie_onboarded', 'true'); window.location.href = '../index.html'; };
+    const gSVG = `<svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 6.294C4.672 4.167 6.656 3.58 9 3.58z"/></svg>`;
+
+    function renderSignup() {
+      area.innerHTML = `
+        <input class="auth-input" type="email" id="ob-email" placeholder="Email address" autocomplete="email"/>
+        <input class="auth-input" type="password" id="ob-pw" placeholder="Password" autocomplete="new-password"/>
+        <button class="primary-btn" id="ob-signup-btn">Start Dreaming 🌙</button>
+        <div class="or-divider">or</div>
+        <button class="google-btn" id="ob-google-btn">${gSVG} Continue with Google</button>
+        <div class="switch-link">Already have an account? <span id="ob-to-signin">Sign in</span></div>
+        <div class="error-msg" id="ob-err"></div>`;
+
+      document.getElementById('ob-signup-btn').onclick = async () => {
+        const email = document.getElementById('ob-email').value.trim();
+        const pw    = document.getElementById('ob-pw').value;
+        if (!email || !pw) return;
+        try { await signUp(collected.name || '', email, pw, { goal: collected.goal || null, wakeTime: collected.bedtime || null }); finish(); }
+        catch (e) { document.getElementById('ob-err').textContent = e.message; }
+      };
+      document.getElementById('ob-google-btn').onclick = async () => {
+        try {
+          const u = await signInWithGoogle();
+          const p = {};
+          if (collected.name)    p.name     = collected.name;
+          if (collected.goal)    p.goal     = collected.goal;
+          if (collected.bedtime) p.wakeTime = collected.bedtime;
+          if (Object.keys(p).length) await saveUserProfile(u.uid, p);
+          finish();
+        } catch (e) { document.getElementById('ob-err').textContent = e.message; }
+      };
+      document.getElementById('ob-to-signin').onclick = () => renderSignin();
+    }
+
+    function renderSignin() {
+      area.innerHTML = `
+        <input class="auth-input" type="email" id="ob-si-email" placeholder="Email address" autocomplete="email"/>
+        <input class="auth-input" type="password" id="ob-si-pw" placeholder="Password" autocomplete="current-password"/>
+        <button class="primary-btn" id="ob-signin-btn">Sign In →</button>
+        <div class="or-divider">or</div>
+        <button class="google-btn" id="ob-google-btn-2">${gSVG} Continue with Google</button>
+        <div class="switch-link">New to Reverie? <span id="ob-to-signup">Create account</span></div>
+        <div class="error-msg" id="ob-err-2"></div>`;
+
+      document.getElementById('ob-signin-btn').onclick = async () => {
+        const email = document.getElementById('ob-si-email').value.trim();
+        const pw    = document.getElementById('ob-si-pw').value;
+        if (!email || !pw) return;
+        try { await logIn(email, pw); finish(); }
+        catch (e) { document.getElementById('ob-err-2').textContent = e.message; }
+      };
+      document.getElementById('ob-google-btn-2').onclick = async () => {
+        try { await signInWithGoogle(); finish(); }
+        catch (e) { document.getElementById('ob-err-2').textContent = e.message; }
+      };
+      document.getElementById('ob-to-signup').onclick = () => renderSignup();
+    }
+
+    isSignIn ? renderSignin() : renderSignup();
+  }
+
+  // ── STORY ──
+  async function runStory() {
+    await sleep(600);
+
+    await showLines([
+      "Every night, while you sleep, your brain does something remarkable.",
+      "",
+      "~It takes the raw material of your day — your fears, your hopes, the thing you said at lunch — and sends you somewhere else entirely.",
+    ]);
+
+    await sleep(800);
+
+    await showLines([
+      "^A strange fact",
+      "During REM sleep, the part of your brain that judges and censors you shuts off completely.",
+      "",
+      "~What's left is unfiltered. Emotionally raw. The most honest signal your mind ever produces.",
+    ]);
+
+    await sleep(900);
+
+    await showLines([
+      "^True story",
+      "Edison used to fall asleep in a chair holding steel balls. When he drifted off, they'd drop and wake him.",
+      "",
+      "~He'd capture whatever was in his head at that exact moment. His best ideas lived there — right at the edge of sleep.",
+    ]);
+
+    await sleep(800);
+
+    await showLines([
+      "MIT ran a study on that exact state.",
+      "",
+      "~They called it hypnagogia. The most creative moment your brain ever enters. And they proved you can use it deliberately.",
+    ]);
+
+    await sleep(700);
+
+    await showLines([
+      "Most people wake up and let it all fade within 90 seconds.",
+      "",
+      "~You're here because you don't want to.",
+    ]);
+
+    await sleep(800);
+
+    await askText("Your name is", 'name', 'your name');
+
+    await sleep(500);
+
+    await showLines([`Nice to meet you, ${collected.name}.`]);
+
+    await sleep(600);
+
+    await askChoice("You're here because you want to", 'goal', [
+      { value: 'understand', label: 'understand my dreams' },
+      { value: 'sleep',      label: 'sleep better' },
+      { value: 'nightmares', label: 'stop my nightmares' },
+      { value: 'lucid',      label: 'have lucid dreams' },
+    ]);
+
+    await sleep(500);
+
+    const goalResp = {
+      understand: ["Dreams are your subconscious without the filter.", "", "~Everything your waking mind glosses over is right there, if you know how to look."],
+      sleep:      ["Your sleep and your mind are more connected than most people realize.", "", "~When one improves, so does the other."],
+      nightmares: ["You don't have to dread closing your eyes.", "", "~There's a therapy — clinically proven, never automated — that rewrites bad dreams at the source. We built it in."],
+      lucid:      ["You can learn to wake up inside your dreams.", "", "~It's a trainable skill. Reverie is built to help you build it."],
+    };
+    await showLines(goalResp[collected.goal] || ["You came to the right place."]);
+
+    await sleep(700);
+
+    await askText("You usually fall asleep around", 'bedtime', '11:00 PM', 'time', '23:00');
+
+    await sleep(500);
+
+    await askChoice("In the morning, you remember your dreams", 'recall', [
+      { value: 'never',     label: 'almost never' },
+      { value: 'sometimes', label: 'sometimes' },
+      { value: 'often',     label: 'pretty often' },
+    ]);
+
+    await sleep(400);
+
+    const recallResp = {
+      never:     ["That's one of the most common things we hear.", "", "~Dream recall is a skill, not a trait. It improves fast."],
+      sometimes: ["There's more in there than you're catching.", "", "~We'll help you hold onto it."],
+      often:     ["Then you're already ahead.", "", "~Now let's actually use it."],
+    };
+    await showLines(recallResp[collected.recall] || [""]);
+
+    await sleep(600);
+
+    await showLines([
+      `Reverie is ready for you, ${collected.name}.`,
+      "",
+      "~Create your account to begin.",
+    ]);
+
+    await sleep(300);
+    await showAuth(false);
+  }
+
+  async function runSignInOnly() {
+    await sleep(400);
+    await showLines(["Welcome back.", "", "~Sign in to continue."]);
+    await sleep(300);
+    await showAuth(true);
+  }
+
+  // ── INIT ──
+  const isSignInMode = new URLSearchParams(window.location.search).get('signin') === '1';
+  onAuthStateChanged(auth, user => {
+    if (user && localStorage.getItem('reverie_onboarded') === 'true') {
+      window.location.href = '../index.html';
+    } else if (isSignInMode) {
+      runSignInOnly();
+    } else {
+      runStory();
+    }
+  });
+</script>
+</body>
+</html>
