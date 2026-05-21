@@ -583,7 +583,12 @@
     window.resetPatternReport    = resetPatternReport;
 
     requireAuth(async user => {
-      allDreams = await getDreams(user.uid);
+      try {
+        allDreams = await getDreams(user.uid);
+      } catch(e) {
+        console.error('Failed to load dreams:', e);
+        allDreams = [];
+      }
       renderDreams();
     });
   </script>

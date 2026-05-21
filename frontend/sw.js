@@ -1,4 +1,4 @@
-const CACHE = 'reverie-v1';
+const CACHE = 'reverie-v2';
 
 const SHELL = [
   '/index.html',
