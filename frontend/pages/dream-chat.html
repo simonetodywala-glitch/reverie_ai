@@ -58,16 +58,18 @@
       0%, 100% { opacity: 0.25; } 50% { opacity: 0.85; }
     }
     .insight-tags { display: flex; flex-wrap: wrap; gap: 5px; }
-    .insight-tag {
-      font-size: 11px; padding: 3px 9px; border-radius: 20px;
-      font-weight: 600; animation: tag-in 0.3s ease;
+    .insight-note {
+      font-size: 11px; padding: 3px 9px; border-radius: 6px;
+      font-weight: 500; animation: tag-in 0.3s ease;
+      background: rgba(255,255,255,0.05);
+      color: var(--text-dim);
+      border: 1px solid rgba(255,255,255,0.09);
+      font-style: italic;
     }
-    .insight-tag.emotion  { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.2); }
-    .insight-tag.theme    { background: rgba(99,198,155,0.1);  color: #6ec6a0; border: 1px solid rgba(99,198,155,0.2);  }
-    .insight-tag.symbol   { background: rgba(251,191,36,0.1);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.2);  }
+    .insight-note::before { content: '✦ '; font-style: normal; opacity: 0.5; }
     @keyframes tag-in {
-      from { opacity: 0; transform: scale(0.8); }
-      to   { opacity: 1; transform: scale(1); }
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     /* ── CHAT AREA ── */
@@ -350,33 +352,19 @@
 
   function hideTyping() { document.getElementById('typing-row')?.remove(); }
 
-  // ── update insight tags ──
-  function updateBullets(bullets) {
-    if (!bullets) return;
-    const hasAny = (bullets.emotions?.length || bullets.themes?.length || bullets.symbols?.length);
-    if (!hasAny) return;
+  // ── update insight notes ──
+  function updateNotes(notes) {
+    if (!notes?.length) return;
 
     document.getElementById('insight-waiting').style.display = 'none';
     const tagsEl = document.getElementById('insight-tags');
     tagsEl.style.display = 'flex';
     tagsEl.innerHTML = '';
 
-    (bullets.emotions || []).forEach(e => {
+    notes.forEach(note => {
       const t = document.createElement('span');
-      t.className = 'insight-tag emotion';
-      t.textContent = e;
-      tagsEl.appendChild(t);
-    });
-    (bullets.themes || []).forEach(e => {
-      const t = document.createElement('span');
-      t.className = 'insight-tag theme';
-      t.textContent = e;
-      tagsEl.appendChild(t);
-    });
-    (bullets.symbols || []).forEach(e => {
-      const t = document.createElement('span');
-      t.className = 'insight-tag symbol';
-      t.textContent = e;
+      t.className = 'insight-note';
+      t.textContent = note;
       tagsEl.appendChild(t);
     });
   }
@@ -414,7 +402,7 @@
       hideTyping();
       addBubble(data.reply, 'ai');
       chatHistory.push({ role: 'assistant', content: data.reply });
-      updateBullets(data.bullets);
+      updateNotes(data.notes);
 
       if (data.ready) {
         isReady = true;
@@ -534,7 +522,7 @@
       hideTyping();
       addBubble(data.reply, 'ai');
       chatHistory.push({ role: 'assistant', content: data.reply });
-      updateBullets(data.bullets);
+      updateNotes(data.notes);
       if (data.ready) {
         isReady = true;
         document.getElementById('input-bar').style.display    = 'none';

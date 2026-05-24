@@ -210,18 +210,14 @@ Your personality:
 
 Your goal: understand the full dream story, uncover emotions felt during and after, spot key symbols and people, find waking life connections if they come up naturally.
 
-As you learn things across the conversation, build the bullets incrementally — include everything detected so far.
-
 {"You have had enough exchanges. You may set ready: true if you genuinely have a solid picture of this dream." if can_wrap else "Set ready: false — keep the conversation going."}
+
+As you learn things, update the notes list. Notes are a clinician's shorthand — only write what's genuinely significant. Each note is 3-7 words. Examples of good notes: "recurring invisibility / feeling unheard", "school = performance anxiety pattern", "waking life stress likely connected", "possible lucid awareness", "authority figure avoidance theme", "fragmented setting — possible sleep disruption", "emotional disconnection from others". Only add a note if it's actually supported by what was shared. Skip generic labels like "fear" or "sadness" — those are too obvious. Notes should read like something a sharp therapist would quietly write down.
 
 ALWAYS respond with valid JSON only, no text before or after:
 {{
   "reply": "your warm conversational response with one question at the end",
-  "bullets": {{
-    "emotions": ["all emotions detected so far in the whole conversation"],
-    "themes": ["conceptual themes like escape and pursuit or hidden threat — not just emotion words"],
-    "symbols": ["key objects, people, or places mentioned so far"]
-  }},
+  "notes": ["cumulative list of significant observations so far — update each turn"],
   "ready": false
 }}"""
 
@@ -235,15 +231,15 @@ ALWAYS respond with valid JSON only, no text before or after:
         raw  = await _call_groq_chat(msgs, json_mode=True)
         data = json.loads(raw)
         return {
-            "reply":   data.get("reply", "Tell me about your dream — whatever you remember."),
-            "bullets": data.get("bullets", {"emotions": [], "themes": [], "symbols": []}),
-            "ready":   bool(data.get("ready", False)) and can_wrap,
+            "reply": data.get("reply", "Tell me about your dream — whatever you remember."),
+            "notes": data.get("notes", []),
+            "ready": bool(data.get("ready", False)) and can_wrap,
         }
     except Exception:
         return {
-            "reply":   "I'm here — tell me about your dream, whatever you remember.",
-            "bullets": {"emotions": [], "themes": [], "symbols": []},
-            "ready":   False,
+            "reply": "I'm here — tell me about your dream, whatever you remember.",
+            "notes": [],
+            "ready": False,
         }
 
 
