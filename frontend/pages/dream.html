@@ -753,29 +753,56 @@
       btn.disabled = true;
       btn.textContent = '🎨 Generating…';
 
-      const base = (currentDream.text || currentDream.summary || '').slice(0, 200);
-      const themes = (currentDream.themes || []).slice(0, 3).map(t => t.split('·')[0].trim()).join(', ');
+      const base = (currentDream.summary || currentDream.text || '').slice(0, 120);
+      const themes = (currentDream.themes || []).slice(0, 2).map(t => t.split('·')[0].trim()).join(', ');
       const prompt = encodeURIComponent(
-        `${base}${themes ? ', ' + themes : ''}, surreal dreamscape, ethereal atmosphere, soft glowing light, impressionist painting style, dreamlike, no text, no words`
+        `${base}${themes ? ', ' + themes : ''}, surreal dreamscape, ethereal, soft glowing light, painterly, no text`
       );
-      const url = `https://image.pollinations.ai/prompt/${prompt}?width=768&height=768&nologo=true&model=flux&seed=${Date.now()}`;
+      const url = `https://image.pollinations.ai/prompt/${prompt}?width=768&height=768&nologo=true&model=flux-schnell&seed=${Math.floor(Math.random()*99999)}`;
 
       document.getElementById('visual-modal').classList.add('open');
       document.getElementById('visual-loading').style.display = 'flex';
+      const loadingText = document.querySelector('.visual-loading-text');
       const img = document.getElementById('visual-img');
       img.style.display = 'none';
       document.getElementById('visual-caption').textContent = '';
 
+      const msgs = ['painting your dream…', 'mixing the colors…', 'almost there…'];
+      let mi = 0;
+      const msgTimer = setInterval(() => { loadingText.textContent = msgs[Math.min(++mi, msgs.length-1)]; }, 6000);
+
+      let done = false;
+      const timeout = setTimeout(() => {
+        if (done) return;
+        done = true;
+        clearInterval(msgTimer);
+        img.src = '';
+        document.getElementById('visual-loading').style.display = 'none';
+        document.getElementById('visual-caption').innerHTML =
+          'Taking too long — <button onclick="closeVisual();generateVisual();" style="background:none;border:none;color:var(--accent-soft);font-size:12px;cursor:pointer;padding:0;">try again</button>';
+        btn.textContent = '🎨 Generate Dream Visual';
+        btn.disabled = false;
+      }, 35000);
+
       img.onload = () => {
+        if (done) return;
+        done = true;
+        clearInterval(msgTimer);
+        clearTimeout(timeout);
         document.getElementById('visual-loading').style.display = 'none';
         img.style.display = 'block';
-        document.getElementById('visual-caption').textContent = 'tap and hold to save image';
+        document.getElementById('visual-caption').textContent = 'tap and hold to save';
         btn.textContent = '🎨 Generate Dream Visual';
         btn.disabled = false;
       };
       img.onerror = () => {
+        if (done) return;
+        done = true;
+        clearInterval(msgTimer);
+        clearTimeout(timeout);
         document.getElementById('visual-loading').style.display = 'none';
-        document.getElementById('visual-caption').textContent = 'Could not generate — try again';
+        document.getElementById('visual-caption').innerHTML =
+          'Could not generate — <button onclick="closeVisual();generateVisual();" style="background:none;border:none;color:var(--accent-soft);font-size:12px;cursor:pointer;padding:0;">try again</button>';
         btn.textContent = '🎨 Generate Dream Visual';
         btn.disabled = false;
       };
