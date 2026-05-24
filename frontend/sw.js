@@ -1,9 +1,10 @@
-const CACHE = 'reverie-v3';
+const CACHE = 'reverie-v4';
 
 const SHELL = [
   '/index.html',
   '/pages/onboarding.html',
   '/pages/dream-chat.html',
+  '/pages/general-chat.html',
   '/pages/journal.html',
   '/pages/dream.html',
   '/pages/dreams.html',

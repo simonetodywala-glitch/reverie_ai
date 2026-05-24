@@ -282,6 +282,37 @@ Return ONLY valid JSON:
         raise HTTPException(status_code=500, detail=f"Analysis generation failed: {str(e)}")
 
 
+@router.post("/general-chat")
+async def general_chat(req: dict, _=Depends(verify_token)):
+    message = req.get("message", "").strip()
+    history = req.get("history", [])
+
+    system = """You are Reverie — a warm, curious mind companion. You're here to talk about whatever is on someone's mind.
+
+You know a lot about dreams, sleep, and the subconscious, but you're equally happy discussing life, emotions, stress, relationships, or just what's been going on lately.
+
+Your personality:
+- Sound like a caring friend who knows a lot about the mind — not a therapist, not a chatbot
+- Use plain everyday language. No jargon
+- Be warm, genuinely curious, occasionally a little playful
+- Keep responses SHORT — 2-3 sentences max, then one question if it feels natural
+- Reference specific things they said to show you're really listening
+- If they describe a dream, explore it naturally and warmly — but don't force analysis
+- Never give a list of bullet points. Just talk."""
+
+    msgs = [{"role": "system", "content": system}]
+    for h in history:
+        msgs.append({"role": h["role"], "content": h["content"]})
+    if message:
+        msgs.append({"role": "user", "content": message})
+
+    try:
+        reply = await _call_groq_chat(msgs, json_mode=False)
+        return {"reply": reply.strip()}
+    except Exception:
+        return {"reply": "I'm here — what's on your mind?"}
+
+
 @router.get("/{user_id}")
 async def get_dreams(user_id: str):
     return {"dreams": [], "count": 0}

@@ -193,3 +193,21 @@ export async function getNightmareCheckins(uid, days = 14) {
   const snap = await getDocs(q);
   return snap.docs.map(d => d.data());
 }
+
+// ─────────────────────────────────────────
+// GENERAL CHAT SESSIONS
+// ─────────────────────────────────────────
+export async function saveGeneralChatSession(uid, messages) {
+  const ref = await addDoc(collection(db, "users", uid, "chatSessions"), {
+    messages,
+    createdAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function getRecentChatSessions(uid, count = 10) {
+  const ref  = collection(db, "users", uid, "chatSessions");
+  const q    = query(ref, orderBy("createdAt", "desc"), limit(count));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}

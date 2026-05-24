@@ -37,7 +37,12 @@
       border-bottom: 1px solid rgba(124,58,237,0.12);
       flex-shrink: 0; min-height: 42px;
     }
-    .insight-moon { font-size: 18px; flex-shrink: 0; margin-top: 1px; line-height: 1.4; }
+    .insight-orb {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      background: var(--orb-color);
+      box-shadow: 0 0 14px 5px rgba(124,58,237,0.45);
+      animation: float 5s ease-in-out infinite;
+    }
     .insight-content { flex: 1; overflow: hidden; }
     .insight-waiting {
       display: flex; align-items: center; gap: 5px; height: 24px;
@@ -247,7 +252,7 @@
 
   <!-- Insight Panel -->
   <div class="insight-panel">
-    <div class="insight-moon">🌙</div>
+    <div class="insight-orb"></div>
     <div class="insight-content">
       <div class="insight-waiting" id="insight-waiting">
         <div class="insight-waiting-dot"></div>
