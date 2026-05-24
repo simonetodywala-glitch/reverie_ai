@@ -54,6 +54,65 @@
     }
     .summarize-analysis-btn:active { background: rgba(124,58,237,0.2); }
 
+    /* ── VISUAL GENERATOR ── */
+    .visual-btn {
+      margin-top: 10px; width: 100%; padding: 12px;
+      border-radius: 100px;
+      background: rgba(124,58,237,0.12);
+      border: 1px solid rgba(124,58,237,0.25);
+      color: var(--accent-soft);
+      font-family: inherit; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .visual-btn:active { background: rgba(124,58,237,0.25); }
+    .visual-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .visual-modal {
+      display: none; position: fixed; inset: 0; z-index: 300;
+      background: rgba(4,0,14,0.96);
+      flex-direction: column; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .visual-modal.open { display: flex; }
+    .visual-modal-close {
+      position: absolute; top: 16px; right: 18px;
+      background: rgba(255,255,255,0.1); border: none;
+      color: #fff; font-size: 20px; width: 36px; height: 36px;
+      border-radius: 50%; cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+    }
+    .visual-loading {
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+    }
+    .visual-loading-orb {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: var(--orb-color);
+      box-shadow: 0 0 40px 14px rgba(124,58,237,0.5);
+      animation: breathe-vis 2.5s ease-in-out infinite;
+    }
+    @keyframes breathe-vis {
+      0%,100% { transform: scale(0.85); opacity: 0.7; }
+      50%      { transform: scale(1.1);  opacity: 1; }
+    }
+    .visual-loading-text {
+      color: rgba(255,255,255,0.55); font-size: 13px;
+      animation: breathe-vis 2.5s ease-in-out infinite;
+    }
+    .visual-image {
+      display: none; max-width: 100%; max-height: 78dvh;
+      border-radius: 18px;
+      box-shadow: 0 0 80px 20px rgba(124,58,237,0.25);
+      animation: img-in 0.5s ease;
+    }
+    @keyframes img-in {
+      from { opacity: 0; transform: scale(0.93); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .visual-caption {
+      margin-top: 14px; font-size: 12px; color: rgba(255,255,255,0.35);
+      text-align: center;
+    }
+
     .reanalyze-panel {
       margin-top: 24px;
       border-top: 1px solid rgba(255,255,255,0.07);
@@ -272,6 +331,17 @@
   </div>
 
   <!-- CHAT FAB -->
+  <!-- Dream Visual Modal -->
+  <div class="visual-modal" id="visual-modal">
+    <button class="visual-modal-close" onclick="closeVisual()">×</button>
+    <div class="visual-loading" id="visual-loading">
+      <div class="visual-loading-orb"></div>
+      <div class="visual-loading-text">painting your dream…</div>
+    </div>
+    <img class="visual-image" id="visual-img" alt="Dream visual" />
+    <div class="visual-caption" id="visual-caption"></div>
+  </div>
+
   <button class="chat-fab" id="chat-fab" onclick="toggleChat()" title="Chat about this dream">💬</button>
 
   <!-- CHAT PANEL -->
@@ -373,6 +443,7 @@
 
       h += `
           <button class="summarize-analysis-btn" onclick="summarizeAnalysis()">📝 Summarize Analysis</button>
+          <button class="visual-btn" id="visual-btn" onclick="generateVisual()">🎨 Generate Dream Visual</button>
           <div id="analysis-summary-block" style="display:none;margin-top:10px;">
             <div class="ai-text" id="analysis-summary-text" style="font-size:14px;line-height:1.7;opacity:0.75;"></div>
           </div>
@@ -674,6 +745,49 @@
       } finally {
         btn.disabled = false;
       }
+    };
+
+    window.generateVisual = function() {
+      if (!currentDream) return;
+      const btn = document.getElementById('visual-btn');
+      btn.disabled = true;
+      btn.textContent = '🎨 Generating…';
+
+      const base = (currentDream.text || currentDream.summary || '').slice(0, 200);
+      const themes = (currentDream.themes || []).slice(0, 3).map(t => t.split('·')[0].trim()).join(', ');
+      const prompt = encodeURIComponent(
+        `${base}${themes ? ', ' + themes : ''}, surreal dreamscape, ethereal atmosphere, soft glowing light, impressionist painting style, dreamlike, no text, no words`
+      );
+      const url = `https://image.pollinations.ai/prompt/${prompt}?width=768&height=768&nologo=true&model=flux&seed=${Date.now()}`;
+
+      document.getElementById('visual-modal').classList.add('open');
+      document.getElementById('visual-loading').style.display = 'flex';
+      const img = document.getElementById('visual-img');
+      img.style.display = 'none';
+      document.getElementById('visual-caption').textContent = '';
+
+      img.onload = () => {
+        document.getElementById('visual-loading').style.display = 'none';
+        img.style.display = 'block';
+        document.getElementById('visual-caption').textContent = 'tap and hold to save image';
+        btn.textContent = '🎨 Generate Dream Visual';
+        btn.disabled = false;
+      };
+      img.onerror = () => {
+        document.getElementById('visual-loading').style.display = 'none';
+        document.getElementById('visual-caption').textContent = 'Could not generate — try again';
+        btn.textContent = '🎨 Generate Dream Visual';
+        btn.disabled = false;
+      };
+      img.src = url;
+    };
+
+    window.closeVisual = function() {
+      document.getElementById('visual-modal').classList.remove('open');
+      const img = document.getElementById('visual-img');
+      img.src = '';
+      img.style.display = 'none';
+      document.getElementById('visual-loading').style.display = 'flex';
     };
 
     async function toggleLucid(isLucid) {
