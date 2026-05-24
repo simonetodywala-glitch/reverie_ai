@@ -219,6 +219,10 @@
   import { requireAuth } from '../js/auth.js';
   import { saveDream }   from '../js/firebase.js';
 
+  const BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://127.0.0.1:8000'
+    : 'https://reverie-aiproject.onrender.com';
+
   let chatHistory    = [];
   let isLoading      = false;
   let isReady        = false;
