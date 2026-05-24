@@ -168,6 +168,120 @@ Write only the condensed summary."""
     return {"summary": summary}
 
 
+async def _call_groq_chat(messages: list, json_mode: bool = False) -> str:
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
+    payload = {
+        "model": GROQ_MODEL,
+        "messages": messages,
+        "temperature": 0.8,
+    }
+    if json_mode:
+        payload["response_format"] = {"type": "json_object"}
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        res = await client.post(
+            GROQ_URL,
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json=payload,
+        )
+        if res.status_code != 200:
+            detail = res.json().get("error", {}).get("message", f"Groq error {res.status_code}")
+            raise HTTPException(status_code=500, detail=detail)
+        return res.json()["choices"][0]["message"]["content"]
+
+
+@router.post("/chat-message")
+async def dream_chat_message(req: dict, _=Depends(verify_token)):
+    message        = req.get("message", "").strip()
+    history        = req.get("history", [])
+    exchange_count = sum(1 for h in history if h.get("role") == "user")
+    can_wrap       = exchange_count >= 4
+
+    system = f"""You are Reverie — a warm, genuinely curious dream companion having a natural conversation to understand someone's dream.
+
+Your personality:
+- Sound like a caring friend who knows a lot about the mind — not a therapist, not a chatbot
+- Use plain everyday language. If you use any psychology term explain it immediately in simple words
+- Be warm, genuinely curious, occasionally a little playful
+- Keep responses SHORT — 2-3 sentences max, then one question
+- Ask ONLY ONE question at a time, never two
+- Reference specific details from what they said to show you're listening
+
+Your goal: understand the full dream story, uncover emotions felt during and after, spot key symbols and people, find waking life connections if they come up naturally.
+
+As you learn things across the conversation, build the bullets incrementally — include everything detected so far.
+
+{"You have had enough exchanges. You may set ready: true if you genuinely have a solid picture of this dream." if can_wrap else "Set ready: false — keep the conversation going."}
+
+ALWAYS respond with valid JSON only, no text before or after:
+{{
+  "reply": "your warm conversational response with one question at the end",
+  "bullets": {{
+    "emotions": ["all emotions detected so far in the whole conversation"],
+    "themes": ["conceptual themes like escape and pursuit or hidden threat — not just emotion words"],
+    "symbols": ["key objects, people, or places mentioned so far"]
+  }},
+  "ready": false
+}}"""
+
+    msgs = [{"role": "system", "content": system}]
+    for h in history:
+        msgs.append({"role": h["role"], "content": h["content"]})
+    if message:
+        msgs.append({"role": "user", "content": message})
+
+    try:
+        raw  = await _call_groq_chat(msgs, json_mode=True)
+        data = json.loads(raw)
+        return {
+            "reply":   data.get("reply", "Tell me about your dream — whatever you remember."),
+            "bullets": data.get("bullets", {"emotions": [], "themes": [], "symbols": []}),
+            "ready":   bool(data.get("ready", False)) and can_wrap,
+        }
+    except Exception:
+        return {
+            "reply":   "I'm here — tell me about your dream, whatever you remember.",
+            "bullets": {"emotions": [], "themes": [], "symbols": []},
+            "ready":   False,
+        }
+
+
+@router.post("/chat-finalize")
+async def dream_chat_finalize(req: dict, _=Depends(verify_token)):
+    history = req.get("history", [])
+    conversation = "\n".join([
+        f"{'User' if h['role'] == 'user' else 'Reverie'}: {h['content']}"
+        for h in history if h.get("role") in ("user", "assistant")
+    ])
+
+    prompt = f"""Based on this conversation about someone's dream, write a deep and thoughtful analysis. You know this dream well.
+
+Conversation:
+{conversation[:5000]}
+
+Write in a warm, conversational tone — like an educated friend explaining something meaningful. No clinical language. If you use any psychology term explain it right away in plain words. Use "you" to speak directly to the person.
+
+Return ONLY valid JSON:
+{{
+  "dream_text": "reconstruct the dream narrative in 2-3 sentences from what was shared",
+  "emotions": ["every distinct emotion present — be specific, there may be 2 or there may be 8, only include ones genuinely present"],
+  "themes": ["conceptual themes formatted as element · what it means for this person — like the lion · a symbol of something overwhelming you're trying to outrun"],
+  "summary": "2-3 sentences. Warm, direct, use 'you'. Capture both the feeling and the meaning.",
+  "interpretation": "2-3 paragraphs. Reference specific images from the dream. What might their mind be quietly working through? Warm and grounded, no jargon.",
+  "reflections": ["one specific genuinely useful question about the dream", "one gentle question connecting the dream to their waking life"],
+  "personal_connections": "1-2 sentences connecting dream elements to their waking life from the conversation. Write null if nothing came up.",
+  "is_nightmare": false
+}}"""
+
+    try:
+        raw  = await _call_groq(prompt, json_mode=True)
+        data = json.loads(raw)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analysis generation failed: {str(e)}")
+
+
 @router.get("/{user_id}")
 async def get_dreams(user_id: str):
     return {"dreams": [], "count": 0}

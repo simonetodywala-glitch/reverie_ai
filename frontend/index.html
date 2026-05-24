@@ -260,7 +260,7 @@
         <a class="nav-link active" href="index.html">Home</a>
         <a class="nav-link" href="pages/dreams.html">Dreams</a>
       </div>
-      <a class="nav-plus" href="pages/journal.html" title="Log a dream">+</a>
+      <a class="nav-plus" href="pages/dream-chat.html" title="Log a dream">+</a>
       <div class="nav-group">
         <a class="nav-link" href="pages/lucid.html">Lucid</a>
         <a class="nav-link" href="pages/winddown.html">Wind Down</a>
@@ -378,7 +378,7 @@
       // ── Recent dreams ──
       const container = document.getElementById('recent-dreams');
       if (!dreams.length) {
-        container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted); font-size:14px; padding:20px;">No dreams logged yet.<br><a href="pages/journal.html" style="color:var(--accent-soft); text-decoration:none;">Log your first dream →</a></div>`;
+        container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted); font-size:14px; padding:20px;">No dreams logged yet.<br><a href="pages/dream-chat.html" style="color:var(--accent-soft); text-decoration:none;">Log your first dream →</a></div>`;
         return;
       }
       container.innerHTML = dreams.slice(0, 2).map(d => {
@@ -434,7 +434,7 @@
         : 'Reverie will track how long you sleep tonight.';
       const confirmBtn = document.querySelector('.wdm-actions .btn-primary');
       confirmBtn.textContent  = isMorning ? 'Log a dream' : 'Yes, let\'s go';
-      confirmBtn.onclick      = isMorning ? () => window.location.href = 'pages/journal.html' : startSleep;
+      confirmBtn.onclick      = isMorning ? () => window.location.href = 'pages/dream-chat.html' : startSleep;
       setTimeout(() => document.getElementById('winddown-modal').classList.add('active'), 80);
     }
 
@@ -481,7 +481,7 @@
         <button class="btn btn-primary" style="margin-top:8px; min-width:200px;"
           onclick="document.getElementById('sleep-active-banner').classList.remove('open');
                    document.getElementById('greeting-card').classList.remove('fade-out');
-                   window.location.href='pages/journal.html'">
+                   window.location.href='pages/dream-chat.html'">
           Log a dream 🌙
         </button>`;
     }

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Reverie">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dream Chat · Reverie</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    body, html { height: 100%; overflow: hidden; }
+    .app-frame  { display: flex; flex-direction: column; height: 100dvh; }
+
+    /* ── HEADER ── */
+    .chat-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px 12px; border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .back-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); font-size: 17px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none;
+    }
+    .chat-title { font-size: 16px; font-weight: 700; color: var(--text); }
+
+    /* ── INSIGHT PANEL ── */
+    .insight-panel {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 16px;
+      background: rgba(124,58,237,0.06);
+      border-bottom: 1px solid rgba(124,58,237,0.12);
+      flex-shrink: 0; min-height: 42px;
+    }
+    .insight-moon { font-size: 18px; flex-shrink: 0; margin-top: 1px; line-height: 1.4; }
+    .insight-content { flex: 1; overflow: hidden; }
+    .insight-waiting {
+      display: flex; align-items: center; gap: 5px; height: 24px;
+    }
+    .insight-waiting-dot {
+      width: 4px; height: 4px; border-radius: 50%;
+      background: var(--text-dim); opacity: 0.35;
+      animation: pulse-dot 1.5s ease-in-out infinite;
+    }
+    .insight-waiting-dot:nth-child(2) { animation-delay: 0.3s; }
+    .insight-waiting-dot:nth-child(3) { animation-delay: 0.6s; }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 0.25; } 50% { opacity: 0.85; }
+    }
+    .insight-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .insight-tag {
+      font-size: 11px; padding: 3px 9px; border-radius: 20px;
+      font-weight: 600; animation: tag-in 0.3s ease;
+    }
+    .insight-tag.emotion  { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.2); }
+    .insight-tag.theme    { background: rgba(99,198,155,0.1);  color: #6ec6a0; border: 1px solid rgba(99,198,155,0.2);  }
+    .insight-tag.symbol   { background: rgba(251,191,36,0.1);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.2);  }
+    @keyframes tag-in {
+      from { opacity: 0; transform: scale(0.8); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* ── CHAT AREA ── */
+    .chat-area {
+      flex: 1; overflow-y: auto; padding: 16px 14px;
+      display: flex; flex-direction: column; gap: 10px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ── BUBBLES ── */
+    .bubble-row      { display: flex; }
+    .bubble-row.ai   { justify-content: flex-start; }
+    .bubble-row.user { justify-content: flex-end; }
+    .bubble {
+      max-width: 80%; padding: 11px 15px; border-radius: 18px;
+      font-size: 14px; line-height: 1.65; word-break: break-word;
+    }
+    .bubble.ai {
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text); border-bottom-left-radius: 4px;
+    }
+    .bubble.user {
+      background: linear-gradient(135deg, #7c3aed, #9b5de5);
+      color: #fff; border-bottom-right-radius: 4px;
+    }
+    .bubble-enter { animation: bubble-in 0.22s ease; }
+    @keyframes bubble-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── TYPING ── */
+    .typing-bubble {
+      display: flex; gap: 5px; align-items: center;
+      padding: 13px 17px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 18px; border-bottom-left-radius: 4px;
+      width: fit-content;
+    }
+    .typing-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      animation: bounce-dot 1.2s ease-in-out infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce-dot {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
+      30% { transform: translateY(-6px); opacity: 1; }
+    }
+
+    /* ── FOOTER ── */
+    .chat-footer {
+      flex-shrink: 0; padding: 10px 12px env(safe-area-inset-bottom, 16px);
+      border-top: 1px solid var(--border); background: var(--bg);
+    }
+    .input-bar { display: flex; align-items: flex-end; gap: 8px; }
+    .mic-btn, .send-btn {
+      width: 42px; height: 42px; border-radius: 50%; border: none;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all 0.18s;
+    }
+    .mic-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-dim); font-size: 17px;
+    }
+    .mic-btn.recording { background: rgba(239,68,68,0.15); color: #ef4444; border-color: rgba(239,68,68,0.35); }
+    .send-btn {
+      background: linear-gradient(135deg, #7c3aed, #9b5de5); color: #fff;
+    }
+    .send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .chat-input {
+      flex: 1; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 11px 15px; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 14px;
+      resize: none; outline: none; max-height: 110px;
+      line-height: 1.5; transition: border-color 0.2s;
+      overflow-y: auto;
+    }
+    .chat-input:focus { border-color: rgba(155,93,229,0.5); }
+    .chat-input::placeholder { color: var(--text-dim); }
+
+    /* ── GENERATE BAR ── */
+    .generate-bar { display: flex; flex-direction: column; gap: 8px; }
+    .generate-btn {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, #7c3aed, #9b5de5);
+      color: #fff; border: none; border-radius: 16px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; letter-spacing: 0.01em;
+    }
+    .generate-btn:active { opacity: 0.85; }
+    .cancel-chat-btn {
+      width: 100%; padding: 11px;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-dim); border-radius: 16px; font-size: 14px;
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+    }
+    .generate-loading {
+      text-align: center; padding: 16px;
+      color: var(--text-dim); font-size: 14px;
+      animation: pulse-dot 1.5s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body>
+<div class="app-frame">
+
+  <!-- Header -->
+  <div class="chat-header">
+    <a class="back-btn" href="../index.html">←</a>
+    <span class="chat-title">New Dream</span>
+    <div style="width:36px;"></div>
+  </div>
+
+  <!-- Insight Panel -->
+  <div class="insight-panel">
+    <div class="insight-moon">🌙</div>
+    <div class="insight-content">
+      <div class="insight-waiting" id="insight-waiting">
+        <div class="insight-waiting-dot"></div>
+        <div class="insight-waiting-dot"></div>
+        <div class="insight-waiting-dot"></div>
+      </div>
+      <div class="insight-tags" id="insight-tags" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- Chat Messages -->
+  <div class="chat-area" id="chat-area"></div>
+
+  <!-- Footer -->
+  <div class="chat-footer">
+    <div class="input-bar" id="input-bar">
+      <button class="mic-btn" id="mic-btn" onclick="toggleMic()">🎤</button>
+      <textarea class="chat-input" id="chat-input" placeholder="tell me about your dream..." rows="1"></textarea>
+      <button class="send-btn" id="send-btn" onclick="sendMessage()" disabled>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+    <div class="generate-bar" id="generate-bar" style="display:none;">
+      <button class="generate-btn" id="generate-btn" onclick="generateAnalysis()">✨ Generate My Analysis</button>
+      <button class="cancel-chat-btn" onclick="history.back()">Cancel</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="../js/app.js"></script>
+<script src="../js/api.js"></script>
+<script type="module">
+  import { requireAuth } from '../js/auth.js';
+  import { saveDream }   from '../js/firebase.js';
+
+  let chatHistory    = [];
+  let isLoading      = false;
+  let isReady        = false;
+  let currentUser    = null;
+  let mediaRec       = null;
+  let audioChunks    = [];
+  let recording      = false;
+
+  requireAuth(user => { currentUser = user; });
+
+  async function authHeaders() {
+    if (!currentUser) return { 'Content-Type': 'application/json' };
+    const token = await currentUser.getIdToken();
+    return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+  }
+
+  // ── textarea auto-expand ──
+  const ta = document.getElementById('chat-input');
+  ta.addEventListener('input', () => {
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 110) + 'px';
+    document.getElementById('send-btn').disabled = !ta.value.trim();
+  });
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+
+  // ── bubble helpers ──
+  function addBubble(text, type) {
+    const area = document.getElementById('chat-area');
+    const row  = document.createElement('div');
+    row.className = `bubble-row ${type}`;
+    const b = document.createElement('div');
+    b.className = `bubble ${type} bubble-enter`;
+    b.textContent = text;
+    row.appendChild(b);
+    area.appendChild(row);
+    area.scrollTop = area.scrollHeight;
+  }
+
+  function showTyping() {
+    const area = document.getElementById('chat-area');
+    const row  = document.createElement('div');
+    row.className = 'bubble-row ai';
+    row.id = 'typing-row';
+    const t = document.createElement('div');
+    t.className = 'typing-bubble';
+    t.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+    row.appendChild(t);
+    area.appendChild(row);
+    area.scrollTop = area.scrollHeight;
+  }
+
+  function hideTyping() { document.getElementById('typing-row')?.remove(); }
+
+  // ── update insight tags ──
+  function updateBullets(bullets) {
+    if (!bullets) return;
+    const hasAny = (bullets.emotions?.length || bullets.themes?.length || bullets.symbols?.length);
+    if (!hasAny) return;
+
+    document.getElementById('insight-waiting').style.display = 'none';
+    const tagsEl = document.getElementById('insight-tags');
+    tagsEl.style.display = 'flex';
+    tagsEl.innerHTML = '';
+
+    (bullets.emotions || []).forEach(e => {
+      const t = document.createElement('span');
+      t.className = 'insight-tag emotion';
+      t.textContent = e;
+      tagsEl.appendChild(t);
+    });
+    (bullets.themes || []).forEach(e => {
+      const t = document.createElement('span');
+      t.className = 'insight-tag theme';
+      t.textContent = e;
+      tagsEl.appendChild(t);
+    });
+    (bullets.symbols || []).forEach(e => {
+      const t = document.createElement('span');
+      t.className = 'insight-tag symbol';
+      t.textContent = e;
+      tagsEl.appendChild(t);
+    });
+  }
+
+  // ── call backend ──
+  async function callChatMessage(message, history) {
+    const res = await fetch(`${BASE_URL}/dreams/chat-message`, {
+      method: 'POST',
+      headers: await authHeaders(),
+      body: JSON.stringify({ message, history }),
+    });
+    if (!res.ok) throw new Error('Chat error');
+    return res.json();
+  }
+
+  // ── send message ──
+  window.sendMessage = async function() {
+    if (isLoading || isReady) return;
+    const message = ta.value.trim();
+    if (!message) return;
+
+    ta.value = '';
+    ta.style.height = 'auto';
+    document.getElementById('send-btn').disabled = true;
+
+    addBubble(message, 'user');
+    const historyBeforeSend = [...chatHistory];
+    chatHistory.push({ role: 'user', content: message });
+
+    isLoading = true;
+    showTyping();
+
+    try {
+      const data = await callChatMessage(message, historyBeforeSend);
+      hideTyping();
+      addBubble(data.reply, 'ai');
+      chatHistory.push({ role: 'assistant', content: data.reply });
+      updateBullets(data.bullets);
+
+      if (data.ready) {
+        isReady = true;
+        document.getElementById('input-bar').style.display    = 'none';
+        document.getElementById('generate-bar').style.display = 'flex';
+      }
+    } catch {
+      hideTyping();
+      addBubble("Something went wrong on my end — want to try again?", 'ai');
+      chatHistory.push({ role: 'assistant', content: "Something went wrong on my end — want to try again?" });
+    }
+    isLoading = false;
+  };
+
+  // ── generate analysis ──
+  window.generateAnalysis = async function() {
+    const bar = document.getElementById('generate-bar');
+    bar.innerHTML = '<div class="generate-loading">✨ Putting it all together...</div>';
+
+    try {
+      const res = await fetch(`${BASE_URL}/dreams/chat-finalize`, {
+        method: 'POST',
+        headers: await authHeaders(),
+        body: JSON.stringify({ history: chatHistory }),
+      });
+      if (!res.ok) throw new Error('Finalize failed');
+      const analysis = await res.json();
+
+      if (!currentUser) throw new Error('Not logged in');
+
+      const dreamId = await saveDream(currentUser.uid, {
+        text:                 analysis.dream_text        || '',
+        emotions:             analysis.emotions          || [],
+        themes:               analysis.themes            || [],
+        summary:              analysis.summary           || '',
+        interpretation:       analysis.interpretation   || '',
+        reflections:          analysis.reflections       || [],
+        personal_connections: analysis.personal_connections || null,
+        is_nightmare:         analysis.is_nightmare      ?? false,
+        from_chat:            true,
+        chat_history:         chatHistory,
+      });
+
+      window.location.href = `dream.html?id=${dreamId}`;
+    } catch {
+      bar.innerHTML = `
+        <button class="generate-btn" onclick="generateAnalysis()">✨ Try Again</button>
+        <button class="cancel-chat-btn" onclick="history.back()">Cancel</button>
+      `;
+    }
+  };
+
+  // ── voice input ──
+  window.toggleMic = async function() {
+    const btn = document.getElementById('mic-btn');
+    if (recording) {
+      mediaRec?.stop();
+      recording = false;
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRec    = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      audioChunks = [];
+
+      mediaRec.ondataavailable = e => audioChunks.push(e.data);
+      mediaRec.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        btn.textContent = '⏳';
+        btn.classList.remove('recording');
+        try {
+          const blob   = new Blob(audioChunks, { type: 'audio/webm' });
+          const result = await transcribeAudio(blob);
+          ta.value = result.text;
+          ta.dispatchEvent(new Event('input'));
+          sendMessage();
+        } catch { /* silent */ }
+        btn.textContent = '🎤';
+      };
+
+      mediaRec.start();
+      recording = true;
+      btn.classList.add('recording');
+      btn.textContent = '⏹';
+    } catch {
+      alert('Microphone access is needed for voice input.');
+    }
+  };
+
+  // ── init: get opening message ──
+  async function initChat() {
+    showTyping();
+    try {
+      const data = await callChatMessage('', []);
+      hideTyping();
+      addBubble(data.reply, 'ai');
+      chatHistory.push({ role: 'assistant', content: data.reply });
+    } catch {
+      hideTyping();
+      const fallback = "Hey! Tell me about your dream — whatever you remember, even the little details.";
+      addBubble(fallback, 'ai');
+      chatHistory.push({ role: 'assistant', content: fallback });
+    }
+  }
+
+  initChat();
+</script>
+</body>
+</html>

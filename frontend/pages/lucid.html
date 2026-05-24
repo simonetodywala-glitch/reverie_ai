@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Reverie">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Lucid Dreams · Reverie</title>
   <link rel="stylesheet" href="../css/styles.css">
@@ -250,7 +254,7 @@
         <a class="nav-link" href="../index.html">Home</a>
         <a class="nav-link" href="dreams.html">Dreams</a>
       </div>
-      <a class="nav-plus" href="journal.html">+</a>
+      <a class="nav-plus" href="dream-chat.html">+</a>
       <div class="nav-group">
         <a class="nav-link active" href="lucid.html">Lucid</a>
         <a class="nav-link" href="winddown.html">Wind Down</a>
@@ -261,6 +265,9 @@
   <script type="module">
     import { requireAuth } from '../js/auth.js';
     import { saveLucidLog, getLucidLog, getLucidStreak, getLucidDreams, getNightmareCheckins } from '../js/firebase.js';
+
+    const hour = new Date().getHours();
+    if (hour >= 6 && hour < 18) document.body.classList.add('morning');
 
     const TODAY = new Date().toISOString().slice(0, 10);
     let _uid  = null;

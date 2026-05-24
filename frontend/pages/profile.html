@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Reverie">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Reverie — Profile</title>
   <link rel="stylesheet" href="../css/styles.css">
@@ -48,6 +52,59 @@
       background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.25);
       font-size: 13px; color: var(--text-dim); line-height: 1.55; display: none;
     }
+
+    /* ── PROFILE HEADER ── */
+    .profile-header {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 28px 0 24px; text-align: center;
+    }
+    .profile-avatar {
+      width: 84px; height: 84px; border-radius: 50%;
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; font-weight: 800; color: #fff;
+      margin-bottom: 14px; letter-spacing: -1px;
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.25), 0 8px 24px rgba(124,58,237,0.3);
+    }
+    .profile-name {
+      font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 3px;
+    }
+    .profile-email-display {
+      font-size: 13px; color: var(--text-dim); margin-bottom: 18px;
+    }
+    .profile-stats-row {
+      display: flex; gap: 12px; justify-content: center; margin-bottom: 18px;
+    }
+    .profile-stat-pill {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 8px 18px; text-align: center;
+    }
+    .profile-stat-num {
+      font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.1;
+    }
+    .profile-stat-label {
+      font-size: 11px; color: var(--text-dim); margin-top: 2px;
+    }
+    .plan-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.25);
+      border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 600;
+      color: var(--accent-soft);
+    }
+    .upgrade-banner {
+      background: linear-gradient(135deg, rgba(124,58,237,0.18), rgba(168,85,247,0.1));
+      border: 1px solid rgba(124,58,237,0.3); border-radius: 18px;
+      padding: 16px 18px; margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .upgrade-banner-text { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+    .upgrade-banner-text strong { color: var(--text); display: block; margin-bottom: 2px; font-size: 14px; }
+    .upgrade-btn {
+      flex-shrink: 0; background: linear-gradient(135deg, #7c3aed, #a855f7);
+      color: #fff; border: none; border-radius: 12px; padding: 9px 16px;
+      font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
@@ -56,6 +113,33 @@
     <div class="page-header">👤 Profile</div>
 
     <div class="main-content page-content">
+
+      <!-- PROFILE HEADER -->
+      <div class="profile-header">
+        <div class="profile-avatar" id="profile-avatar">?</div>
+        <div class="profile-name" id="profile-name">—</div>
+        <div class="profile-email-display" id="profile-email">—</div>
+        <div class="profile-stats-row">
+          <div class="profile-stat-pill">
+            <div class="profile-stat-num" id="profile-dreams">—</div>
+            <div class="profile-stat-label">dreams logged</div>
+          </div>
+          <div class="profile-stat-pill">
+            <div class="profile-stat-num" id="profile-streak">—</div>
+            <div class="profile-stat-label">night streak</div>
+          </div>
+        </div>
+        <div class="plan-badge">✦ <span id="profile-plan">Free Plan</span></div>
+      </div>
+
+      <!-- UPGRADE BANNER -->
+      <div class="upgrade-banner">
+        <div class="upgrade-banner-text">
+          <strong>Unlock Reverie Premium</strong>
+          IRT nightmare therapy, pattern reports, unlimited AI chat and more.
+        </div>
+        <button class="upgrade-btn">$6.99 / mo</button>
+      </div>
 
       <!-- MIND PROFILE -->
       <div class="section-label">Mind Profile</div>
@@ -222,30 +306,6 @@
 
       </div>
 
-      <!-- USER INFO -->
-      <div class="section-label" style="margin-top:8px;">Account</div>
-      <div class="card">
-        <div class="result-row">
-          <span class="result-label">Name</span>
-          <span class="result-value" id="profile-name">—</span>
-        </div>
-        <div class="result-row">
-          <span class="result-label">Email</span>
-          <span class="result-value" id="profile-email" style="font-size:14px; word-break:break-all;">—</span>
-        </div>
-        <div class="result-row">
-          <span class="result-label">Dreams logged</span>
-          <span class="result-value" id="profile-dreams">—</span>
-        </div>
-        <div class="result-row">
-          <span class="result-label">Current streak</span>
-          <span class="result-value" id="profile-streak">—</span>
-        </div>
-        <div class="result-row">
-          <span class="result-label">Plan</span>
-          <span class="result-value" style="color:var(--gold);">Free</span>
-        </div>
-      </div>
 
       <!-- PREFERENCES -->
       <div class="section-label" style="margin-top:8px;">Preferences</div>
@@ -274,7 +334,7 @@
         <a class="nav-link" href="../index.html">Home</a>
         <a class="nav-link" href="dreams.html">Dreams</a>
       </div>
-      <a class="nav-plus" href="journal.html">+</a>
+      <a class="nav-plus" href="dream-chat.html">+</a>
       <div class="nav-group">
         <a class="nav-link" href="lucid.html">Lucid</a>
         <a class="nav-link" href="winddown.html">Wind Down</a>
@@ -394,12 +454,15 @@
       ]);
       currentUserProfile = profile;
 
-      // ── Account section ──
-      document.getElementById('profile-name').textContent       = user.displayName || profile?.name || '—';
-      document.getElementById('profile-email').textContent      = user.email || '—';
-      document.getElementById('profile-dreams').textContent     = dreams.length;
+      // ── Profile header ──
+      const displayName = user.displayName || profile?.name || '?';
+      document.getElementById('profile-name').textContent   = displayName;
+      document.getElementById('profile-email').textContent  = user.email || '—';
+      document.getElementById('profile-dreams').textContent = dreams.length;
       const streak = computeStreak(dreams);
-      document.getElementById('profile-streak').textContent     = streak > 0 ? `🔥 ${streak} night${streak !== 1 ? 's' : ''}` : '—';
+      document.getElementById('profile-streak').textContent = streak > 0 ? `🔥 ${streak}` : '0';
+      const initials = displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      document.getElementById('profile-avatar').textContent = initials || '?';
       document.getElementById('profile-chronotype').textContent = chronotypeLabel[profile?.chronotype] || '—';
       document.getElementById('profile-goal').textContent       = goalLabel[profile?.goal] || '—';
       document.getElementById('profile-waketime').textContent   = profile?.wakeTime || '—';
