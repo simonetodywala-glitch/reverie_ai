@@ -166,10 +166,77 @@
       color: var(--text-dim); font-size: 14px;
       animation: pulse-dot 1.5s ease-in-out infinite;
     }
+
+    /* ── KICKOFF SCREEN ── */
+    .kickoff-screen {
+      position: absolute; inset: 0; z-index: 20;
+      background: var(--bg);
+      display: flex; flex-direction: column;
+    }
+    .kickoff-body {
+      flex: 1; display: flex; flex-direction: column;
+      justify-content: center;
+      padding: 24px 24px env(safe-area-inset-bottom, 24px);
+      overflow-y: auto;
+    }
+    .kickoff-moon  { font-size: 30px; text-align: center; margin-bottom: 10px; }
+    .kickoff-title { font-size: 20px; font-weight: 700; text-align: center; color: var(--text); margin-bottom: 4px; }
+    .kickoff-sub   { font-size: 13px; text-align: center; color: var(--text-dim); margin-bottom: 32px; }
+    .kickoff-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px;
+    }
+    .kickoff-field {
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 12px 15px; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.55;
+      resize: none; outline: none; box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    .kickoff-field:focus { border-color: rgba(155,93,229,0.5); }
+    .kickoff-field::placeholder { color: var(--text-dim); }
+    .kickoff-group  { margin-bottom: 20px; }
+    .kickoff-btn {
+      width: 100%; margin-top: 12px; padding: 15px;
+      background: linear-gradient(135deg, #7c3aed, #9b5de5);
+      color: #fff; border: none; border-radius: 16px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; opacity: 0.4;
+      transition: opacity 0.2s;
+    }
+    .kickoff-btn.active { opacity: 1; }
   </style>
 </head>
 <body>
 <div class="app-frame">
+
+  <!-- Kickoff Screen -->
+  <div class="kickoff-screen" id="kickoff-screen">
+    <div class="chat-header">
+      <a class="back-btn" href="../index.html">←</a>
+      <span class="chat-title">New Dream</span>
+      <div style="width:36px;"></div>
+    </div>
+    <div class="kickoff-body">
+      <div class="kickoff-moon">🌙</div>
+      <div class="kickoff-title">What did you dream?</div>
+      <div class="kickoff-sub">Two quick things, then we'll explore it together.</div>
+
+      <div class="kickoff-group">
+        <div class="kickoff-label">I dreamed about</div>
+        <textarea class="kickoff-field" id="kickoff-about" rows="2"
+          placeholder="a lion in a savanna, flying over a city, my old house…"></textarea>
+      </div>
+
+      <div class="kickoff-group">
+        <div class="kickoff-label">Most important part</div>
+        <textarea class="kickoff-field" id="kickoff-important" rows="2"
+          placeholder="the moment it got strange, how I felt when I woke up…"></textarea>
+      </div>
+
+      <button class="kickoff-btn" id="kickoff-btn" onclick="startChat()" disabled>Begin →</button>
+    </div>
+  </div>
 
   <!-- Header -->
   <div class="chat-header">
@@ -432,23 +499,50 @@
     }
   };
 
-  // ── init: get opening message ──
-  async function initChat() {
+  // ── kickoff: enable button when first field has text ──
+  document.getElementById('kickoff-about').addEventListener('input', () => {
+    const hasText = document.getElementById('kickoff-about').value.trim().length > 0;
+    const btn = document.getElementById('kickoff-btn');
+    btn.disabled = !hasText;
+    btn.classList.toggle('active', hasText);
+  });
+
+  // ── kickoff: start chat from form ──
+  window.startChat = async function() {
+    const about     = document.getElementById('kickoff-about').value.trim();
+    const important = document.getElementById('kickoff-important').value.trim();
+    if (!about) return;
+
+    document.getElementById('kickoff-screen').style.display = 'none';
+
+    const firstMsg = important
+      ? `I dreamed about ${about}. The most important part was ${important}.`
+      : `I dreamed about ${about}.`;
+
+    addBubble(firstMsg, 'user');
+    chatHistory.push({ role: 'user', content: firstMsg });
+
+    isLoading = true;
     showTyping();
     try {
-      const data = await callChatMessage('', []);
+      const data = await callChatMessage(firstMsg, []);
       hideTyping();
       addBubble(data.reply, 'ai');
       chatHistory.push({ role: 'assistant', content: data.reply });
+      updateBullets(data.bullets);
+      if (data.ready) {
+        isReady = true;
+        document.getElementById('input-bar').style.display    = 'none';
+        document.getElementById('generate-bar').style.display = 'flex';
+      }
     } catch {
       hideTyping();
-      const fallback = "Hey! Tell me about your dream — whatever you remember, even the little details.";
+      const fallback = "Hey! Tell me more — what was the most vivid moment?";
       addBubble(fallback, 'ai');
       chatHistory.push({ role: 'assistant', content: fallback });
     }
-  }
-
-  initChat();
+    isLoading = false;
+  };
 </script>
 </body>
 </html>
