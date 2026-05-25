@@ -427,17 +427,7 @@
     function handleOrbClick() {
       if (localStorage.getItem('reverie_sleep_start')) return;
       spawnRipple();
-      const isMorning = document.body.classList.contains('morning');
-      if (isMorning) {
-        setTimeout(() => { window.location.href = 'pages/dream-chat.html'; }, 260);
-        return;
-      }
-      document.querySelector('.wdm-title').textContent = 'Ready to wind down?';
-      document.querySelector('.wdm-sub').textContent   = 'Reverie will track how long you sleep tonight.';
-      const confirmBtn = document.querySelector('.wdm-actions .btn-primary');
-      confirmBtn.textContent = 'Yes, let\'s go';
-      confirmBtn.onclick     = startSleep;
-      setTimeout(() => document.getElementById('winddown-modal').classList.add('active'), 80);
+      setTimeout(() => { window.location.href = 'pages/dream-chat.html'; }, 260);
     }
 
     function cancelWinddown() {
