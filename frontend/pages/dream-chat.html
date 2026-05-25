@@ -152,22 +152,26 @@
     .chat-input:focus { border-color: rgba(155,93,229,0.5); }
     .chat-input::placeholder { color: var(--text-dim); }
 
-    /* ── GENERATE BAR ── */
-    .generate-bar { display: flex; flex-direction: column; gap: 8px; }
+    /* ── GENERATE ROW ── */
+    .generate-row {
+      margin-top: 8px; display: flex; gap: 8px;
+    }
     .generate-btn {
-      width: 100%; padding: 14px;
+      flex: 1; padding: 12px;
+      background: rgba(124,58,237,0.15);
+      border: 1px solid rgba(124,58,237,0.25);
+      color: rgba(168,85,247,0.6);
+      border-radius: 16px; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .generate-btn.ready {
       background: linear-gradient(135deg, #7c3aed, #9b5de5);
-      color: #fff; border: none; border-radius: 16px;
-      font-size: 15px; font-weight: 700; cursor: pointer;
-      font-family: 'DM Sans', sans-serif; letter-spacing: 0.01em;
+      border-color: transparent; color: #fff;
+      font-size: 14px;
     }
     .generate-btn:active { opacity: 0.85; }
-    .cancel-chat-btn {
-      width: 100%; padding: 11px;
-      background: transparent; border: 1px solid var(--border);
-      color: var(--text-dim); border-radius: 16px; font-size: 14px;
-      cursor: pointer; font-family: 'DM Sans', sans-serif;
-    }
+    .generate-btn:disabled { opacity: 0.35; cursor: not-allowed; }
     .generate-loading {
       text-align: center; padding: 16px;
       color: var(--text-dim); font-size: 14px;
@@ -279,9 +283,8 @@
         </svg>
       </button>
     </div>
-    <div class="generate-bar" id="generate-bar" style="display:none;">
-      <button class="generate-btn" id="generate-btn" onclick="generateAnalysis()">✨ Generate My Analysis</button>
-      <button class="cancel-chat-btn" onclick="history.back()">Cancel</button>
+    <div class="generate-row">
+      <button class="generate-btn" id="generate-btn" onclick="generateAnalysis()">✨ Generate Analysis</button>
     </div>
   </div>
 
@@ -404,10 +407,11 @@
       chatHistory.push({ role: 'assistant', content: data.reply });
       updateNotes(data.notes);
 
-      if (data.ready) {
+      if (data.ready && !isReady) {
         isReady = true;
-        document.getElementById('input-bar').style.display    = 'none';
-        document.getElementById('generate-bar').style.display = 'flex';
+        document.getElementById('generate-btn').classList.add('ready');
+        addBubble("I think I have a good picture of this dream. Whenever you're ready, hit Generate — or keep going if there's more.", 'ai');
+        chatHistory.push({ role: 'assistant', content: "I think I have a good picture of this dream. Whenever you're ready, hit Generate — or keep going if there's more." });
       }
     } catch {
       hideTyping();
@@ -419,8 +423,9 @@
 
   // ── generate analysis ──
   window.generateAnalysis = async function() {
-    const bar = document.getElementById('generate-bar');
-    bar.innerHTML = '<div class="generate-loading">✨ Putting it all together...</div>';
+    const btn = document.getElementById('generate-btn');
+    btn.disabled = true;
+    btn.textContent = '✨ Putting it all together…';
 
     try {
       const res = await fetch(`${BASE_URL}/dreams/chat-finalize`, {
@@ -448,10 +453,9 @@
 
       window.location.href = `dream.html?id=${dreamId}`;
     } catch {
-      bar.innerHTML = `
-        <button class="generate-btn" onclick="generateAnalysis()">✨ Try Again</button>
-        <button class="cancel-chat-btn" onclick="history.back()">Cancel</button>
-      `;
+      btn.textContent = '✨ Generate Analysis';
+      btn.disabled = false;
+      addBubble("Something went wrong generating your analysis — tap Generate to try again.", 'ai');
     }
   };
 
@@ -523,10 +527,11 @@
       addBubble(data.reply, 'ai');
       chatHistory.push({ role: 'assistant', content: data.reply });
       updateNotes(data.notes);
-      if (data.ready) {
+      if (data.ready && !isReady) {
         isReady = true;
-        document.getElementById('input-bar').style.display    = 'none';
-        document.getElementById('generate-bar').style.display = 'flex';
+        document.getElementById('generate-btn').classList.add('ready');
+        addBubble("I think I have a good picture of this dream. Whenever you're ready, hit Generate — or keep going if there's more.", 'ai');
+        chatHistory.push({ role: 'assistant', content: "I think I have a good picture of this dream. Whenever you're ready, hit Generate — or keep going if there's more." });
       }
     } catch {
       hideTyping();
